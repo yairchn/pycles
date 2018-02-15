@@ -7,7 +7,7 @@ import sys
 import platform
 import subprocess as sp
 import os.path
-import string 
+import string
 
 
 # Now get include paths from relevant python modules
@@ -42,7 +42,7 @@ elif 'eu' in platform.node():
     f_compiler = 'gfortran'
 elif platform.machine()  == 'x86_64':
     #Compile flags for fram @ Caltech
-    library_dirs = string.split(os.environ['LD_LIBRARY_PATH'],':')  
+    library_dirs = string.split(os.environ['LD_LIBRARY_PATH'],':')
     libraries = []
     libraries.append('mpi')
     libraries.append('gfortran')
@@ -70,11 +70,6 @@ _ext = Extension('Initialization', ['Initialization.pyx'], include_dirs=include_
 extensions.append(_ext)
 
 _ext = Extension('Microphysics', ['Microphysics.pyx'], include_dirs=include_path,
-                 extra_compile_args=extra_compile_args, libraries=libraries, library_dirs=library_dirs,
-                 runtime_library_dirs=library_dirs)
-extensions.append(_ext)
-
-_ext = Extension('Microphysics_Arctic_1M', ['Microphysics_Arctic_1M.pyx'], include_dirs=include_path,
                  extra_compile_args=extra_compile_args, libraries=libraries, library_dirs=library_dirs,
                  runtime_library_dirs=library_dirs)
 extensions.append(_ext)
