@@ -61,6 +61,8 @@ def main():
         namelist = SCMS()
     elif case_name == 'GATE_III':
         namelist = GATE_III()
+    elif case_name == 'GCMVarying':
+        namelist = GCMVarying()
     else:
         print('Not a vaild case name')
         exit()
@@ -1321,6 +1323,7 @@ def ZGILS(zgils_loc):
 
     return namelist
 
+
 def TRMM_LBA():
     # adopted from: "Daytime convective development over land- A model intercomparison based on LBA observations",
     # By Grabowski et al (2004)  Q. J. R. Meteorol. Soc. 132 317-344
@@ -1772,6 +1775,98 @@ def Wangara():
     namelist['conditional_stats']['classes'] = ['Spectra']
     namelist['conditional_stats']['frequency'] = 600.0
     namelist['conditional_stats']['stats_dir'] = 'cond_stats'
+
+    return namelist
+
+def GCMVarying():
+
+    namelist = {}
+
+    namelist['grid'] = {}
+    namelist['grid']['dims'] = 3
+    namelist['grid']['nx'] = 6
+    namelist['grid']['ny'] = 6
+    namelist['grid']['nz'] = 64
+    namelist['grid']['gw'] = 3
+    namelist['grid']['dx'] = 400.0
+    namelist['grid']['dy'] = 400.0
+    namelist['grid']['dz'] = 100.0
+
+    namelist['mpi'] = {}
+    namelist['mpi']['nprocx'] = 1
+    namelist['mpi']['nprocy'] = 1
+    namelist['mpi']['nprocz'] = 1
+
+    namelist['time_stepping'] = {}
+    namelist['time_stepping']['ts_type'] = 2
+    namelist['time_stepping']['cfl_limit'] = 0.7
+    namelist['time_stepping']['dt_initial'] = 1e-6
+    namelist['time_stepping']['dt_max'] = 30.0
+    namelist['time_stepping']['t_max'] = 3600.0*24.0*50.0 # 50 days
+
+    namelist['thermodynamics'] = {}
+    namelist['thermodynamics']['latentheat'] = 'variable'
+
+    namelist['damping'] = {}
+    namelist['damping']['scheme'] = 'Rayleigh'
+    namelist['damping']['Rayleigh'] = {}
+    namelist['damping']['Rayleigh']['gamma_r'] = 0.01
+    namelist['damping']['Rayleigh']['z_d'] = 10000.0
+
+    namelist['microphysics'] = {}
+    # namelist['microphysics']['scheme'] = 'T_Liquid'
+    namelist['microphysics']['scheme'] = 'Arctic_1M'
+    # namelist['microphysics']['phase_partitioning'] = 'liquid_only'
+    namelist['microphysics']['n0_ice'] = 1.0e7
+
+    namelist['sgs'] = {}
+    namelist['sgs']['scheme'] = 'Smagorinsky'
+    namelist['sgs']['Smagorinsky'] ={}
+    namelist['sgs']['Smagorinsky']['iles'] = False
+
+    namelist["diffusion"] = {}
+    namelist['diffusion']['qt_entropy_source'] = False
+
+    namelist['momentum_transport'] = {}
+    namelist['momentum_transport']['order'] = 5
+
+    namelist['scalar_transport'] = {}
+    namelist['scalar_transport']['order'] = 5
+    namelist['scalar_transport']['order_sedimentation'] = 1
+
+    namelist['gcm'] = {}
+    namelist['gcm']['latitude'] = 80.0
+    namelist['gcm']['file'] = './forcing/f_data_tv_90.pkl'
+
+    namelist['surface'] = {}
+
+    namelist['radiation'] = {}
+    namelist['radiation']['use_RRTM'] = False
+    # namelist['radiation']['RRTM'] = {}
+
+    namelist['output'] = {}
+    namelist['output']['output_root'] = './'
+
+    namelist['restart'] = {}
+    namelist['restart']['output'] = True
+    namelist['restart']['init_from'] = False
+    namelist['restart']['input_path'] = './'
+    namelist['restart']['frequency'] = 600.0
+    namelist['restart']['delete_old'] = True
+
+    namelist['stats_io'] = {}
+    namelist['stats_io']['stats_dir'] = "stats"
+    namelist['stats_io']['auxiliary'] = 'None'
+    namelist['stats_io']['frequency'] = 60.0*60*6
+
+    namelist['fields_io'] = {}
+    namelist['fields_io']['fields_dir'] = "fields"
+    namelist['fields_io']['frequency'] = 864000.0
+    namelist['fields_io']['diagnostic_fields'] = ['ql', 'temperature', 'buoyancy']
+
+    namelist['meta'] = {}
+    namelist['meta']['simname'] = 'GCMVarying'
+    namelist['meta']['casename'] = 'GCMVarying'
 
     return namelist
 

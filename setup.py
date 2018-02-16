@@ -34,7 +34,7 @@ elif 'eu' in platform.node():
     libraries.append('gfortran')
     extensions = []
     extra_compile_args=[]
-    extra_compile_args+=['-std=c99', '-O3', '-march=native', '-Wno-unused',
+    extra_compile_args+=['-std=c99', '-O3',  '-Wno-unused',
                          '-Wno-#warnings', '-Wno-maybe-uninitialized', '-Wno-cpp', '-Wno-array-bounds','-fPIC']
     extra_objects=['./RRTMG/rrtmg_build/rrtmg_combined.o']
     netcdf_include = '/cluster/apps/netcdf/4.3.1/x86_64/gcc_4.8.2/openmpi_1.6.5/include'
@@ -70,6 +70,11 @@ _ext = Extension('Initialization', ['Initialization.pyx'], include_dirs=include_
 extensions.append(_ext)
 
 _ext = Extension('Microphysics', ['Microphysics.pyx'], include_dirs=include_path,
+                 extra_compile_args=extra_compile_args, libraries=libraries, library_dirs=library_dirs,
+                 runtime_library_dirs=library_dirs)
+extensions.append(_ext)
+
+_ext = Extension('Microphysics_Arctic_1M', ['Microphysics_Arctic_1M.pyx'], include_dirs=include_path,
                  extra_compile_args=extra_compile_args, libraries=libraries, library_dirs=library_dirs,
                  runtime_library_dirs=library_dirs)
 extensions.append(_ext)
