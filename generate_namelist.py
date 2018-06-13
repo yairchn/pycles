@@ -61,6 +61,12 @@ def main():
         namelist = CGILS_S12(is_p2, is_ctl_omega)
     elif case_name == 'ZGILS':
         namelist = ZGILS(zgils_loc)
+    elif case_name == 'TRMM_LBA':
+        namelist = TRMM_LBA()
+    elif case_name == 'ARM_SGP':
+        namelist = ARM_SGP()
+    elif case_name == 'GATE_III':
+        namelist = GATE_III()
     else:
         print('Not a vaild case name')
         exit()
@@ -147,6 +153,11 @@ def SullivanPatton():
     namelist['meta']['simname'] = 'SullivanPatton'
     namelist['meta']['casename'] = 'SullivanPatton'
 
+    namelist['tracers'] = {}
+    namelist['tracers']['use_tracers'] = True
+    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['use_lcl_tracers'] = True
+
     return namelist
 
 
@@ -226,6 +237,11 @@ def SaturatedBubble():
     namelist['meta']['casename'] = 'SaturatedBubble'
     namelist['meta']['simname'] = 'SaturatedBubble'
 
+    namelist['tracers'] = {}
+    namelist['tracers']['use_tracers'] = True
+    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['use_lcl_tracers'] = True
+
     return namelist
 
 
@@ -304,6 +320,11 @@ def StableBubble():
     namelist['meta'] = {}
     namelist['meta']['simname'] = 'StableBubble'
     namelist['meta']['casename'] = 'StableBubble'
+
+    namelist['tracers'] = {}
+    namelist['tracers']['use_tracers'] = True
+    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['use_lcl_tracers'] = True
 
     return namelist
 
@@ -480,6 +501,11 @@ def Gabls():
     namelist['meta']['simname'] = 'Gabls'
     namelist['meta']['casename'] = 'Gabls'
 
+    namelist['tracers'] = {}
+    namelist['tracers']['use_tracers'] = True
+    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['use_lcl_tracers'] = True
+
     return namelist
 
 def DYCOMS_RF01():
@@ -574,6 +600,11 @@ def DYCOMS_RF01():
     namelist['meta']['simname'] = 'DYCOMS_RF01'
     namelist['meta']['casename'] = 'DYCOMS_RF01'
 
+    namelist['tracers'] = {}
+    namelist['tracers']['use_tracers'] = True
+    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['use_lcl_tracers'] = True
+
     return namelist
 
 def DYCOMS_RF02():
@@ -662,6 +693,11 @@ def DYCOMS_RF02():
     namelist['meta'] = {}
     namelist['meta']['simname'] = 'DYCOMS_RF02'
     namelist['meta']['casename'] = 'DYCOMS_RF02'
+
+    namelist['tracers'] = {}
+    namelist['tracers']['use_tracers'] = True
+    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['use_lcl_tracers'] = True
 
     return namelist
 
@@ -754,6 +790,11 @@ def SMOKE():
     namelist['meta']['simname'] = 'SMOKE'
     namelist['meta']['casename'] = 'SMOKE'
 
+    namelist['tracers'] = {}
+    namelist['tracers']['use_tracers'] = True
+    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['use_lcl_tracers'] = True
+
     return namelist
 
 def Rico():
@@ -844,6 +885,10 @@ def Rico():
     namelist['conditional_stats']['frequency'] = 600.0
     namelist['conditional_stats']['stats_dir'] = 'cond_stats'
 
+    namelist['tracers'] = {}
+    namelist['tracers']['use_tracers'] = True
+    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['use_lcl_tracers'] = True
 
     return namelist
 
@@ -931,6 +976,11 @@ def Isdac():
     namelist['meta'] = {}
     namelist['meta']['simname'] = 'Isdac'
     namelist['meta']['casename'] = 'Isdac'
+
+    namelist['tracers'] = {}
+    namelist['tracers']['use_tracers'] = True
+    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['use_lcl_tracers'] = True
 
     return namelist
 
@@ -1033,6 +1083,11 @@ def IsdacCC():
     namelist['meta']['simname'] = 'IsdacCC'
     namelist['meta']['casename'] = 'IsdacCC'
 
+    namelist['tracers'] = {}
+    namelist['tracers']['use_tracers'] = True
+    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['use_lcl_tracers'] = True
+
     return namelist
 
 
@@ -1122,6 +1177,11 @@ def Mpace():
     namelist['meta'] = {}
     namelist['meta']['simname'] = 'Mpace'
     namelist['meta']['casename'] = 'Mpace'
+
+    namelist['tracers'] = {}
+    namelist['tracers']['use_tracers'] = True
+    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['use_lcl_tracers'] = True
 
     return namelist
 
@@ -1215,6 +1275,11 @@ def Sheba():
     namelist['meta'] = {}
     namelist['meta']['simname'] = 'Sheba'
     namelist['meta']['casename'] = 'Sheba'
+
+    namelist['tracers'] = {}
+    namelist['tracers']['use_tracers'] = True
+    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['use_lcl_tracers'] = True
 
     return namelist
 
@@ -1337,6 +1402,10 @@ def CGILS_S6(is_p2,is_ctl_omega):
     namelist['conditional_stats']['frequency'] = 43200.0
     namelist['conditional_stats']['stats_dir'] = 'cond_stats'
 
+    namelist['tracers'] = {}
+    namelist['tracers']['use_tracers'] = True
+    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['use_lcl_tracers'] = True
 
     return namelist
 
@@ -1458,6 +1527,10 @@ def CGILS_S11(is_p2,is_ctl_omega):
     namelist['conditional_stats']['frequency'] = 43200.0
     namelist['conditional_stats']['stats_dir'] = 'cond_stats'
 
+    namelist['tracers'] = {}
+    namelist['tracers']['use_tracers'] = True
+    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['use_lcl_tracers'] = True
 
     return namelist
 
@@ -1577,6 +1650,10 @@ def CGILS_S12(is_p2,is_ctl_omega):
     namelist['conditional_stats']['frequency'] = 43200.0
     namelist['conditional_stats']['stats_dir'] = 'cond_stats'
 
+    namelist['tracers'] = {}
+    namelist['tracers']['use_tracers'] = True
+    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['use_lcl_tracers'] = True
 
     return namelist
 
@@ -1698,9 +1775,290 @@ def ZGILS(zgils_loc):
     namelist['conditional_stats']['frequency'] = 43200.0
     namelist['conditional_stats']['stats_dir'] = 'cond_stats'
 
+    namelist['tracers'] = {}
+    namelist['tracers']['use_tracers'] = True
+    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['use_lcl_tracers'] = True
 
     return namelist
 
+
+
+def TRMM_LBA():
+    # adopted from: "Daytime convective development over land- A model intercomparison based on LBA observations",
+    # By Grabowski et al (2004)  Q. J. R. Meteorol. Soc. 132 317-344
+    # modifications: we use less random perturbations than the original paper, our simulation does not change domain size in time
+    # and has higher resolution in the BL when deep convection takes place
+
+    namelist = {}
+
+    namelist['grid'] = {}
+    namelist['grid']['dims'] = 3
+    namelist['grid']['nx'] = 200
+    namelist['grid']['ny'] = 200
+    namelist['grid']['nz'] = 220
+    namelist['grid']['gw'] = 3
+    namelist['grid']['dx'] = 100.0
+    namelist['grid']['dy'] = 100.0
+    namelist['grid']['dz'] = 100.0
+    namelist['grid']['stretch'] = True
+
+    namelist['mpi'] = {}
+    namelist['mpi']['nprocx'] = 1
+    namelist['mpi']['nprocy'] = 1
+    namelist['mpi']['nprocz'] = 1
+
+    namelist['time_stepping'] = {}
+    namelist['time_stepping']['ts_type'] = 3
+    namelist['time_stepping']['cfl_limit'] = 0.7
+    namelist['time_stepping']['dt_initial'] = 1.0
+    namelist['time_stepping']['dt_max'] = 10.0
+    namelist['time_stepping']['t_max'] = 3600.0 * 6.0
+
+    namelist['thermodynamics'] = {}
+    namelist['thermodynamics']['latentheat'] = 'constant'
+
+    namelist['microphysics'] = {}
+    namelist['microphysics']['scheme'] = 'Arctic_1M' #T_Liquid'
+    namelist['microphysics']['phase_partitioning'] = 'liquid_only' # liquid_ice
+
+    #namelist['microphysics']['cloud_sedimentation'] = False
+    #namelist['microphysics']['ccn'] = 70.0e6
+    #namelist['microphysics']['SB_Liquid']['nu_droplet'] = 0
+    #namelist['microphysics']['SB_Liquid']['mu_rain'] = 1
+
+    namelist['sgs'] = {}
+    namelist['sgs']['scheme'] = 'Smagorinsky'
+
+    namelist['tracers'] = {}
+    namelist['tracers']['use_tracers'] = True
+    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['use_lcl_tracers'] = True
+
+    namelist['diffusion'] = {}
+    namelist['diffusion']['qt_entropy_source'] = False
+
+    namelist['momentum_transport'] = {}
+    namelist['momentum_transport']['order'] = 5 # the WENO order of the momentum advection scheme
+
+    namelist['scalar_transport'] = {}
+    namelist['scalar_transport']['order'] = 5 # the WENO order of the scaler advection scheme
+    namelist['scalar_transport']['order_sedimentation'] = 1
+
+    namelist['damping'] = {}
+    namelist['damping']['scheme'] = 'Rayleigh'
+    namelist['damping']['Rayleigh'] = {}
+    namelist['damping']['Rayleigh']['gamma_r'] = 0.2
+    namelist['damping']['Rayleigh']['z_d'] = 4000
+
+    namelist['output'] = {}
+    namelist['output']['output_root'] = './'
+
+    namelist['stats_io'] = {}
+    namelist['stats_io']['stats_dir'] = 'stats'
+    namelist['stats_io']['auxiliary'] = ['Cumulus']
+    namelist['stats_io']['frequency'] = 100.0
+
+    namelist['fields_io'] = {}
+    namelist['fields_io']['fields_dir'] = 'fields'
+    namelist['fields_io']['frequency'] = 1800.0
+    namelist['fields_io']['diagnostic_fields'] = ['ql', 'temperature', 'buoyancy_frequency', 'viscosity', 'buoyancy' , 'thetali']
+
+    namelist['meta'] = {}
+    namelist['meta']['simname'] = 'TRMM_LBA'
+    namelist['meta']['casename'] = 'TRMM_LBA'
+
+    namelist['restart'] = {}
+    namelist['restart']['output'] = True
+    namelist['restart']['init_from'] = False
+    namelist['restart']['input_path'] = './'
+    namelist['restart']['frequency'] = 600.0
+
+    namelist['conditional_stats'] = {}
+    namelist['conditional_stats']['classes'] = ['Spectra']
+    namelist['conditional_stats']['frequency'] = 600.0
+    namelist['conditional_stats']['stats_dir'] = 'cond_stats'
+
+    return namelist
+
+
+def ARM_SGP():
+    # adopted from: "Large-eddy simulation of the diurnal cycle of shallow cumulus convection over land",
+    # By Brown et al. (2002)  Q. J. R. Meteorol. Soc. 128, 1075-1093
+    namelist = {}
+
+    namelist['grid'] = {}
+    namelist['grid']['dims'] = 3
+    namelist['grid']['nx'] = 8# 100
+    namelist['grid']['ny'] = 8# 100
+    namelist['grid']['nz'] = 110
+    namelist['grid']['gw'] = 3
+    namelist['grid']['dx'] = 64.0
+    namelist['grid']['dy'] = 64.0
+    namelist['grid']['dz'] = 40.0
+
+    namelist['mpi'] = {}
+    namelist['mpi']['nprocx'] = 1 #6
+    namelist['mpi']['nprocy'] = 1 #4
+    namelist['mpi']['nprocz'] = 1
+
+    namelist['time_stepping'] = {}
+    namelist['time_stepping']['ts_type'] = 3
+    namelist['time_stepping']['cfl_limit'] = 0.7
+    namelist['time_stepping']['dt_initial'] = 1.0
+    namelist['time_stepping']['dt_max'] = 10.0
+    namelist['time_stepping']['t_max'] = 3600.0 * 14.5
+
+    namelist['thermodynamics'] = {}
+    namelist['thermodynamics']['latentheat'] = 'constant'
+
+    namelist['microphysics'] = {}
+    namelist['microphysics']['scheme'] = 'None_SA'
+    namelist['microphysics']['phase_partitioning'] = 'liquid_only'
+
+    namelist['sgs'] = {}
+    namelist['sgs']['scheme'] = 'Smagorinsky'
+
+    namelist['tracers'] = {}
+    namelist['tracers']['use_tracers'] = True
+    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['use_lcl_tracers'] = True
+
+    namelist['diffusion'] = {}
+    namelist['diffusion']['qt_entropy_source'] = False
+
+    namelist['momentum_transport'] = {}
+    namelist['momentum_transport']['order'] = 5 # the WENO order of the momentum advection scheme
+
+    namelist['scalar_transport'] = {}
+    namelist['scalar_transport']['order'] = 5 # the WENO order of the scaler advection scheme
+    namelist['scalar_transport']['order_sedimentation'] = 1
+
+    namelist['damping'] = {} # I used the Bomex values here
+    namelist['damping']['scheme'] = 'Rayleigh'
+    namelist['damping']['Rayleigh'] = {}
+    namelist['damping']['Rayleigh']['gamma_r'] = 0.2
+    namelist['damping']['Rayleigh']['z_d'] = 900
+
+    namelist['output'] = {}
+    namelist['output']['output_root'] = './'
+
+    namelist['stats_io'] = {}
+    namelist['stats_io']['stats_dir'] = 'stats'
+    namelist['stats_io']['auxiliary'] = ['Cumulus']
+    namelist['stats_io']['frequency'] = 100.0
+
+    namelist['fields_io'] = {}
+    namelist['fields_io']['fields_dir'] = 'fields'
+    namelist['fields_io']['frequency'] = 1800.0
+    namelist['fields_io']['diagnostic_fields'] = ['ql', 'temperature', 'buoyancy_frequency', 'viscosity']
+
+    namelist['meta'] = {}
+    namelist['meta']['simname'] = 'ARM_SGP'
+    namelist['meta']['casename'] = 'ARM_SGP'
+
+    namelist['restart'] = {}
+    namelist['restart']['output'] = True
+    namelist['restart']['init_from'] = False
+    namelist['restart']['input_path'] = './'
+    namelist['restart']['frequency'] = 600.0
+
+    namelist['conditional_stats'] = {}
+    namelist['conditional_stats']['classes'] = ['Spectra']
+    namelist['conditional_stats']['frequency'] = 600.0
+    namelist['conditional_stats']['stats_dir'] = 'cond_stats'
+
+    return namelist
+
+
+def GATE_III():
+    # adopted from: "Large eddy simulation of Maritime Deep Tropical Convection",
+    # By Khairoutdinov et al (2009)  JAMES, vol. 1, article #15
+    namelist = {}
+
+    namelist['grid'] = {}
+    namelist['grid']['dims'] = 3
+    namelist['grid']['nx'] = 2048
+    namelist['grid']['ny'] = 2048
+    namelist['grid']['nz'] = 220
+    namelist['grid']['gw'] = 3
+    namelist['grid']['dx'] = 100.0
+    namelist['grid']['dy'] = 100.0
+    namelist['grid']['dz'] = 100.0
+    namelist['grid']['stretch'] = True
+
+    namelist['mpi'] = {}
+    namelist['mpi']['nprocx'] = 1
+    namelist['mpi']['nprocy'] = 1
+    namelist['mpi']['nprocz'] = 1
+
+    namelist['time_stepping'] = {}
+    namelist['time_stepping']['ts_type'] = 3
+    namelist['time_stepping']['cfl_limit'] = 0.7
+    namelist['time_stepping']['dt_initial'] = 1.0
+    namelist['time_stepping']['dt_max'] = 2.0
+    namelist['time_stepping']['t_max'] = 3600.0 * 24.0
+
+    namelist['thermodynamics'] = {}
+    namelist['thermodynamics']['latentheat'] = 'constant'
+
+    namelist['microphysics'] = {}
+    namelist['microphysics']['scheme'] = 'Arctic_1M'  # T_Liquid'
+    namelist['microphysics']['phase_partitioning'] = 'liquid_only'  # liquid_ice
+
+    namelist['sgs'] = {}
+    namelist['sgs']['scheme'] = 'Smagorinsky'
+
+    namelist['tracers'] = {}
+    namelist['tracers']['use_tracers'] = True
+    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['use_lcl_tracers'] = True
+
+    namelist['diffusion'] = {}
+    namelist['diffusion']['qt_entropy_source'] = False
+
+    namelist['momentum_transport'] = {}
+    namelist['momentum_transport']['order'] = 5 # the WENO order of the momentum advection scheme
+
+    namelist['scalar_transport'] = {}
+    namelist['scalar_transport']['order'] = 5 # the WENO order of the scaler advection scheme
+    namelist['scalar_transport']['order_sedimentation'] = 1
+
+    namelist['damping'] = {}
+    namelist['damping']['scheme'] = 'Rayleigh'
+    namelist['damping']['Rayleigh'] = {}
+    namelist['damping']['Rayleigh']['gamma_r'] = 0.2
+    namelist['damping']['Rayleigh']['z_d'] = 4000
+
+    namelist['output'] = {}
+    namelist['output']['output_root'] = './'
+
+    namelist['stats_io'] = {}
+    namelist['stats_io']['stats_dir'] = 'stats'
+    namelist['stats_io']['auxiliary'] = ['Cumulus']
+    namelist['stats_io']['frequency'] = 100.0
+
+    namelist['fields_io'] = {}
+    namelist['fields_io']['fields_dir'] = 'fields'
+    namelist['fields_io']['frequency'] = 1800.0
+    namelist['fields_io']['diagnostic_fields'] = ['ql', 'temperature', 'buoyancy_frequency', 'viscosity']
+
+    namelist['meta'] = {}
+    namelist['meta']['simname'] = 'GATE_III'
+    namelist['meta']['casename'] = 'GATE_III'
+
+    namelist['restart'] = {}
+    namelist['restart']['output'] = True
+    namelist['restart']['init_from'] = False
+    namelist['restart']['input_path'] = './'
+    namelist['restart']['frequency'] = 600.0
+
+    namelist['conditional_stats'] = {}
+    namelist['conditional_stats']['classes'] = ['Spectra']
+    namelist['conditional_stats']['frequency'] = 600.0
+    namelist['conditional_stats']['stats_dir'] = 'cond_stats'
+
+    return namelist
 
 def write_file(namelist):
 
