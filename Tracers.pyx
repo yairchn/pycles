@@ -215,7 +215,7 @@ cdef class UpdraftTracers:
                        desc=r'environment liquid water specific humidity')
             NS.add_profile('env_ql2', Gr, Pa, units=r'kg^2 kg^{-2}',nice_name=r'q_{l,u}^2',
                        desc=r'environment total water specific humidity square')
-        if 'qr' in PV.name_index:
+        if 'qr' in PV.name_index or 'qrain' in PV.name_index:
             NS.add_profile('updraft_qr', Gr, Pa, units=r'kg kg^{-1}',nice_name=r'q_{r,u}',
                        desc=r'updraft rain water specific humidity')
             NS.add_profile('updraft_qr2', Gr, Pa, units=r'kg^2 kg^{-2}',nice_name=r'q_{r,u}^2',
