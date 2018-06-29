@@ -16,8 +16,6 @@ cimport ReferenceState
 cimport PrognosticVariables
 cimport DiagnosticVariables
 from NetCDFIO cimport NetCDFIO_Fields, NetCDFIO_Stats
-
-
 from scipy.integrate import odeint
 
 include 'parameters.pxi'
@@ -80,6 +78,7 @@ cdef class ClausiusClapeyron:
         tp_close_index = np.max(np.where(T<=Tt))
 
         #Check to make sure that T_tilde is not in T
+
         if T[tp_close_index] == Tt:
             Par.root_print('Array of temperatures for ClasiusClapyeron lookup table contains Tt  \n')
             Par.root_print('Pick different values for ClasiusClapyeron Tmin and Tmax in lookup table \n')

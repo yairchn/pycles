@@ -38,6 +38,7 @@ class Simulation3d:
         return
 
     def initialize(self, namelist):
+
         self.Pa = ParallelMPI.ParallelMPI(namelist)
         self.Gr = Grid.Grid(namelist, self.Pa)
         self.PV = PrognosticVariables.PrognosticVariables(self.Gr)
