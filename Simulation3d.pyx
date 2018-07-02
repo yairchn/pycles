@@ -38,31 +38,55 @@ class Simulation3d:
         return
 
     def initialize(self, namelist):
-
+        print '41'
         self.Pa = ParallelMPI.ParallelMPI(namelist)
+        print '43'
         self.Gr = Grid.Grid(namelist, self.Pa)
+        print '45'
         self.PV = PrognosticVariables.PrognosticVariables(self.Gr)
+        print '47'
         self.Ke = Kinematics.Kinematics()
+        print '49'
         self.DV = DiagnosticVariables.DiagnosticVariables()
+        print '51'
         self.Pr = PressureSolver.PressureSolver()
+        print '53'
         self.LH = LatentHeat(namelist, self.Pa)
+        print '55'
         self.Micro = MicrophysicsFactory(namelist, self.LH, self.Pa)
+        print '57'
         self.SA = ScalarAdvection.ScalarAdvection(namelist, self.LH, self.Pa)
+        print '59'
         self.MA = MomentumAdvection.MomentumAdvection(namelist, self.Pa)
+        print '61'
         self.SGS = SGS.SGS(namelist)
+        print '63'
         self.SD = ScalarDiffusion.ScalarDiffusion(namelist, self.LH, self.DV, self.Pa)
+        print '65'
         self.MD = MomentumDiffusion.MomentumDiffusion(self.DV, self.Pa)
+        print '67'
         self.Th = ThermodynamicsFactory(namelist, self.Micro, self.LH, self.Pa)
+        print '69'
         self.Ref = ReferenceState.ReferenceState(self.Gr)
+        print '71'
         self.Sur = SurfaceFactory(namelist, self.LH, self.Pa)
+        print '73'
         self.Fo = Forcing.Forcing(namelist, self.LH, self.Pa)
+        print '75'
         self.Ra = RadiationFactory(namelist,self.LH, self.Pa)
+        print '77'
         self.Budg = SurfaceBudgetFactory(namelist)
+        print '79'
         self.StatsIO = NetCDFIO.NetCDFIO_Stats()
+        print '81'
         self.FieldsIO = NetCDFIO.NetCDFIO_Fields()
+        print '83'
         self.CondStatsIO = NetCDFIO.NetCDFIO_CondStats()
+        print '85'
         self.Restart = Restart.Restart(namelist, self.Pa)
+        print '87'
         self.VO = VisualizationOutput.VisualizationOutput(namelist, self.Pa)
+        print '89'
         self.Damping = Damping.Damping(namelist, self.Pa)
         self.TS = TimeStepping.TimeStepping()
         self.Tr = TracersFactory(namelist)
