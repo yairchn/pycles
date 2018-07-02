@@ -136,7 +136,6 @@ void get_rain_n0(const struct DimStruct *dims, double* restrict density, double*
                 double n0_rain = b1*pow(rwc, b2);
                 double n0_max = rwc*N_MAX_RAIN;
                 double n0_min = rwc*N_MIN_RAIN;
-
                 nrain[ijk] = fmax(fmin(n0_rain,n0_max),n0_min);
 
             }
@@ -173,7 +172,6 @@ void get_snow_n0(const struct DimStruct *dims, double* restrict density, double*
                 double n0_snow = y1*pow(swc*1000.0, y2);
                 double n0_max = swc*N_MAX_SNOW;
                 double n0_min = swc*N_MIN_SNOW;
-
                 nsnow[ijk] = fmax(fmin(n0_snow,n0_max),n0_min);
 
             }
@@ -434,7 +432,6 @@ void microphysics_sources(const struct DimStruct *dims, struct LookupStruct *LT,
             const ssize_t jshift = j * jstride;
             for(ssize_t k=kmin; k<kmax; k++){
                 const ssize_t ijk = ishift + jshift + k;
-
                 // First get number concentartion N_0 for micro species
                 qi_tmp = fmax(qi[ijk], 0.0);
                 iwc = fmax(qi_tmp * density[k], SMALL);
@@ -448,7 +445,6 @@ void microphysics_sources(const struct DimStruct *dims, struct LookupStruct *LT,
                 precip_rate[ijk] = 0.0;
                 evap_rate[ijk] = 0.0;
                 melt_rate[ijk] = 0.0;
-
                 // Now do sub-timestepping
                 double time_added = 0.0, dt_, rate;
                 ssize_t iter_count = 0;
@@ -470,10 +466,6 @@ void microphysics_sources(const struct DimStruct *dims, struct LookupStruct *LT,
 
                     ql_tendency_acc = 0.0;
                     qi_tendency_acc = 0.0;
-
-                    precip_tmp = 0.0;
-                    evap_tmp = 0.0;
-
                     autoconversion_rain(density[k], ccn, ql_tmp, qrain_tmp, nrain[ijk], &qrain_tendency_aut);
                     autoconversion_snow(LT, lam_fp, L_fp, density[k], p0[k], temperature[ijk], qt_tmp,
                                         qi_tmp, ni, &qsnow_tendency_aut);
@@ -510,7 +502,6 @@ void microphysics_sources(const struct DimStruct *dims, struct LookupStruct *LT,
                     precip_rate[ijk] += precip_tmp * dt_;
                     evap_rate[ijk] += evap_tmp * dt_;
                     melt_rate[ijk] += qsnow_tendency_melt * dt_; // NEGATIVE if snow melts to rain
-
                     //Integrate forward in time
                     ql_tmp += ql_tendency_tmp * dt_;
                     qi_tmp += qi_tendency_tmp * dt_;
@@ -607,7 +598,6 @@ void sedimentation_velocity_snow(const struct DimStruct *dims, double* restrict 
             const ssize_t jshift = j * jstride;
             for(ssize_t k=kmin; k<kmax; k++){
                 const ssize_t ijk = ishift + jshift + k;
-
                 double snow_lam = snow_lambda(density[k], qsnow[ijk], nsnow[ijk]);
                 qsnow_velocity[ijk] = -C_SNOW*GBD1_SNOW/GB1_SNOW/pow(snow_lam, D_SNOW);
 
@@ -777,6 +767,7 @@ void entropy_source_melt(const struct DimStruct *dims, double* restrict temperat
 };
 
 
+
 void entropy_source_heating_rain(const struct DimStruct *dims, double* restrict temperature, double* restrict Twet, double* restrict qrain,
                                double* restrict w_qrain, double* restrict w,  double* restrict entropy_tendency){
 
@@ -800,6 +791,7 @@ void entropy_source_heating_rain(const struct DimStruct *dims, double* restrict 
             const ssize_t jshift = j * jstride;
             for(ssize_t k=kmin; k<kmax; k++){
                 const ssize_t ijk = ishift + jshift + k;
+
                 entropy_tendency[ijk]+= qrain[ijk]*(fabs(w_qrain[ijk]) - w[ijk]) * cl * (Twet[ijk+1] - Twet[ijk])* dzi/temperature[ijk];
             }
         }
@@ -824,7 +816,6 @@ void entropy_source_heating_snow(const struct DimStruct *dims, double* restrict 
     const ssize_t jmax = dims->nlg[1]-dims->gw;
     const ssize_t kmax = dims->nlg[2]-dims->gw;
     const double dzi = 1.0/dims->dx[2];
-
 
     for(ssize_t i=imin; i<imax; i++){
         const ssize_t ishift = i * istride;

@@ -147,16 +147,20 @@ class Simulation3d:
         cdef int rk_step
         # DO First Output
         self.Th.update(self.Gr, self.Ref, PV_, DV_)
-        self.Ra.initialize_profiles(self.Gr, self.Ref, self.Th, self.DV, self.Sur, self.Pa)
+        self.Sur.update(self.Gr, self.Ref,self.PV, self.DV,self.Pa,self.TS) # ?
+        self.Fo.update(self.Gr, self.Ref, self.PV, self.DV, self.TS, self.Pa) # ?
+        self.Ra.initialize_profiles(self.Gr, self.Ref, self.DV, self.StatsIO,self.Pa)
+        self.Ra.update(self.Gr, self.Ref, self.PV, self.DV, self.Sur, self.TS, self.Pa) # ?
+        self.Damping.update(self.Gr, self.Ref,self.PV, self.DV, self.Pa, self.TS) # ?
 
         #Do IO if not a restarted run
         if not self.Restart.is_restart_run:
             self.force_io()
-
         while (self.TS.t < self.TS.t_max):
             time1 = time.time()
             for self.TS.rk_step in xrange(self.TS.n_rk_steps):
                 self.Ke.update(self.Gr,PV_)
+                #print 'Th'
                 self.Th.update(self.Gr,self.Ref,PV_,DV_)
                 self.Micro.update(self.Gr, self.Ref, self.Th, PV_, DV_, self.TS, self.Pa )
                 self.Tr.update(self.Gr, self.Ref, PV_, DV_, self.TS,self.Pa)
@@ -169,6 +173,7 @@ class Simulation3d:
                 self.MD.update(self.Gr,self.Ref,self.PV,self.DV,self.Ke)
                 self.Fo.update(self.Gr, self.Ref, self.PV, self.DV, self.Pa, self.TS)
                 self.Ra.update(self.Gr, self.Ref, self.PV, self.DV, self.Sur, self.TS, self.Pa)
+                #print 'Budg'
                 self.Budg.update(self.Gr,self.Ra, self.Sur, self.TS, self.Pa)
                 self.Tr.update_cleanup(self.Gr, self.Ref, PV_, DV_, self.Pa, self.TS)
                 self.TS.update(self.Gr, self.PV, self.Pa)
@@ -229,11 +234,9 @@ class Simulation3d:
                 self.StatsIO.write_simulation_time(self.TS.t, self.Pa)
                 self.Micro.stats_io(self.Gr, self.Ref, self.Th, self.PV, self.DV, self.StatsIO, self.Pa) # do Micro.stats_io prior to DV.stats_io to get sedimentation velocity only in output
                 self.PV.stats_io(self.Gr, self.Ref, self.StatsIO, self.Pa)
-
                 self.DV.stats_io(self.Gr, self.StatsIO, self.Pa)
                 self.Fo.stats_io(self.Gr, self.Ref, self.PV, self.DV, self.StatsIO, self.Pa)
                 self.Th.stats_io(self.Gr, self.Ref, self.PV, self.DV, self.StatsIO, self.Pa)
-
                 self.Sur.stats_io(self.Gr, self.StatsIO, self.Pa)
                 self.SGS.stats_io(self.Gr,self.DV,self.PV,self.Ke,self.StatsIO,self.Pa)
                 self.SA.stats_io(self.Gr, self.Ref,self.PV, self.StatsIO, self.Pa)
@@ -282,17 +285,13 @@ class Simulation3d:
                 self.Restart.write(self.Pa)
                 self.Pa.root_print('Finished Dumping Restart Files!')
 
-
-
-
-
-
         return
 
     def force_io(self):
         # output stats here
 
         self.Pa.root_print('Doing 3D FieldIO')
+
         self.Th.update(self.Gr, self.Ref, self.PV, self.DV)
         self.FieldsIO.update(self.Gr, self.PV, self.DV, self.TS, self.Pa)
         self.FieldsIO.dump_prognostic_variables(self.Gr, self.PV)
@@ -306,7 +305,6 @@ class Simulation3d:
         self.DV.stats_io(self.Gr, self.StatsIO, self.Pa)
         self.Fo.stats_io(
             self.Gr, self.Ref, self.PV, self.DV, self.StatsIO, self.Pa)
-
         self.Th.stats_io(self.Gr, self.Ref, self.PV, self.DV, self.StatsIO, self.Pa)
         self.Micro.stats_io(self.Gr, self.Ref, self.Th, self.PV, self.DV, self.StatsIO, self.Pa)
         self.Sur.stats_io(self.Gr, self.StatsIO, self.Pa)
@@ -322,5 +320,6 @@ class Simulation3d:
 
         self.Aux.stats_io(self.Gr, self.Ref, self.PV, self.DV, self.MA, self.MD, self.StatsIO, self.Pa)
         self.StatsIO.close_files(self.Pa)
+        self.Pa.root_print('Finished Forcing Initial io')
         return
 

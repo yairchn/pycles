@@ -27,7 +27,6 @@ from profiles import profile_data
 # import matplotlib.pyplot as plt
 import sys
 import math
-
 def RadiationFactory(namelist, LatentHeat LH, ParallelMPI.ParallelMPI Pa):
     # if namelist specifies RRTM is to be used, this will override any case-specific radiation schemes
     try:
@@ -269,7 +268,8 @@ cdef class RadiationDyCOMS_RF01(RadiationBase):
             Py_ssize_t jstride = Gr.dims.nlg[2]
             Py_ssize_t ql_shift = DV.get_varshift(Gr, 'ql')
             Py_ssize_t qt_shift = PV.get_varshift(Gr, 'qt')
-            Py_ssize_t s_shift = PV.get_varshift(Gr, 's')
+            Py_ssize_t s_shift
+            Py_ssize_t thli_shift
             Py_ssize_t t_shift = DV.get_varshift(Gr, 'temperature')
             Py_ssize_t gw = Gr.dims.gw
             double [:, :] ql_pencils =  self.z_pencil.forward_double(&Gr.dims, Pa, &DV.values[ql_shift])
@@ -283,7 +283,7 @@ cdef class RadiationDyCOMS_RF01(RadiationBase):
             double rhoi
             double dz = Gr.dims.dx[2]
             double dzi = Gr.dims.dxi[2]
-            double[:] z = Gr.z
+            double[:] z = Gr.zp
             double[:] rho = Ref.rho0
             double[:] rho_half = Ref.rho0_half
             double cbrt_z = 0
@@ -314,7 +314,7 @@ cdef class RadiationDyCOMS_RF01(RadiationBase):
                 f_rad[pi, 0] += self.f1 * exp(-q_1)
                 for k in xrange(1, Gr.dims.n[2] + 1):
                     q_1 += self.kap * \
-                        rho_half[gw + k - 1] * ql_pencils[pi, k - 1] * dz
+                        rho_half[gw + k - 1] * ql_pencils[pi, k - 1] * Gr.dims.dzpl_half[gw+k-1]
                     f_rad[pi, k] += self.f1 * exp(-q_1)
 
                 # Compute the first term on RHS of Stevens et al. 2005
@@ -322,18 +322,20 @@ cdef class RadiationDyCOMS_RF01(RadiationBase):
                 q_0 = 0.0
                 f_rad[pi, Gr.dims.n[2]] += self.f0 * exp(-q_0)
                 for k in xrange(Gr.dims.n[2] - 1, -1, -1):
-                    q_0 += self.kap * rho_half[gw + k] * ql_pencils[pi, k] * dz
+                    q_0 += self.kap * rho_half[gw + k] * ql_pencils[pi, k] *  Gr.dims.dzpl_half[gw+k]
                     f_rad[pi, k] += self.f0 * exp(-q_0)
 
                 for k in xrange(Gr.dims.n[2]):
                     f_heat[pi, k] = - \
-                       (f_rad[pi, k + 1] - f_rad[pi, k]) * dzi / rho_half[k]
+                       (f_rad[pi, k + 1] - f_rad[pi, k]) * dzi * Gr.dims.imet_half[k] / rho_half[k]
 
         # Now transpose the flux pencils
         self.z_pencil.reverse_double(&Gr.dims, Pa, f_heat, &self.heating_rate[0])
 
 
         # Now update entropy tendencies
+
+        s_shift = PV.get_varshift(Gr, 's')
         with nogil:
             for i in xrange(imin, imax):
                 ishift = i * istride
@@ -342,8 +344,8 @@ cdef class RadiationDyCOMS_RF01(RadiationBase):
                     for k in xrange(kmin, kmax):
                         ijk = ishift + jshift + k
                         PV.tendencies[
-                            s_shift + ijk] +=  self.heating_rate[ijk] / DV.values[ijk + t_shift] 
-                        self.dTdt_rad[ijk] = self.heating_rate[ijk] / cpm_c(PV.values[ijk + qt_shift]) 
+                            s_shift + ijk] +=  self.heating_rate[ijk] / DV.values[ijk + t_shift]
+                        self.dTdt_rad[ijk] = self.heating_rate[ijk] / cpm_c(PV.values[ijk + qt_shift])
 
         return
 
@@ -410,7 +412,7 @@ cdef class RadiationSmoke(RadiationBase):
             double rhoi
             double dz = Gr.dims.dx[2]
             double dzi = Gr.dims.dxi[2]
-            double[:] z = Gr.z
+            double[:] z = Gr.zp
             double[:] rho = Ref.rho0
             double[:] rho_half = Ref.rho0_half
             double cbrt_z = 0
@@ -423,12 +425,12 @@ cdef class RadiationSmoke(RadiationBase):
                 q_0 = 0.0
                 f_rad[pi, Gr.dims.n[2]] = self.f0 * exp(-q_0)
                 for k in xrange(Gr.dims.n[2] - 1, -1, -1):
-                    q_0 += self.kap * rho_half[gw + k] * smoke_pencils[pi, k] * dz
+                    q_0 += self.kap * rho_half[gw + k] * smoke_pencils[pi, k] * Gr.dims.dzpl_half[gw+k]
                     f_rad[pi, k] = self.f0 * exp(-q_0)
 
                 for k in xrange(Gr.dims.n[2]):
                     f_heat[pi, k] = - \
-                       (f_rad[pi, k + 1] - f_rad[pi, k]) * dzi / rho_half[k]
+                       (f_rad[pi, k + 1] - f_rad[pi, k]) * dzi * Gr.dims.imet_half[k] / rho_half[k]
 
         # Now transpose the flux pencils
         self.z_pencil.reverse_double(&Gr.dims, Pa, f_heat, &self.heating_rate[0])
@@ -1331,16 +1333,14 @@ cdef class RadiationRRTM(RadiationBase):
         self.z_pencil.reverse_double(&Gr.dims, Pa, dflux_sw_clear_pencil, &self.dflux_sw_clear[0])
         return
 
-
+        return
     cpdef stats_io(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, DiagnosticVariables.DiagnosticVariables DV,
                    NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):
 
-        RadiationBase.stats_io(self, Gr, Ref, DV, NS, Pa)
+        RadiationBase.stats_io(self, Gr, Ref, DV, NS,  Pa)
 
 
         return
-
-
 
 cdef class RadiationTRMM_LBA(RadiationBase):
 
@@ -1503,14 +1503,13 @@ cdef class RadiationTRMM_LBA(RadiationBase):
                 #self.rad_cool[kk]    = (self.rad[ind2,kk]-self.rad[ind1,kk])/(self.rad_time[ind2]-self.rad_time[ind1])*TS.dt+self.rad[ind1,kk] # yair check the impact of the dt typ
         # get the radiative cooling to the moist entropy equation - here is it in K /day
         cdef:
+
             Py_ssize_t imin = Gr.dims.gw
             Py_ssize_t jmin = Gr.dims.gw
             Py_ssize_t kmin = Gr.dims.gw
-
             Py_ssize_t imax = Gr.dims.nlg[0] - Gr.dims.gw
             Py_ssize_t jmax = Gr.dims.nlg[1] - Gr.dims.gw
             Py_ssize_t kmax = Gr.dims.nlg[2] - Gr.dims.gw
-
             Py_ssize_t pi, i, j, k, ijk, ishift, jshift
             Py_ssize_t istride = Gr.dims.nlg[1] * Gr.dims.nlg[2]
             Py_ssize_t jstride = Gr.dims.nlg[2]
@@ -1534,12 +1533,11 @@ cdef class RadiationTRMM_LBA(RadiationBase):
     cpdef stats_io(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, DiagnosticVariables.DiagnosticVariables DV,
                    NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):
 
-        RadiationBase.stats_io(self, Gr, Ref, DV, NS,  Pa)
+        RadiationBase.stats_io(self, Gr, Ref, DV, NS, Pa)
 
 
 
         return
-
 
 
 #Calculate cos(solar zenith angle) from radiation.f90 in JPLLES provided by Colleen

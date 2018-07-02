@@ -4,7 +4,7 @@ cimport PrognosticVariables
 cimport DiagnosticVariables
 cimport ParallelMPI
 cimport TimeStepping
-from libc.math cimport pow, exp
+from libc.math cimport pow, exp,fmax, fmin
 
 from Thermodynamics cimport ClausiusClapeyron
 from NetCDFIO cimport NetCDFIO_Fields, NetCDFIO_Stats

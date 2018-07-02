@@ -16,8 +16,6 @@ cimport Lookup
 cimport Thermodynamics
 import cython
 from Thermodynamics cimport LatentHeat, ClausiusClapeyron
-
-
 from NetCDFIO cimport NetCDFIO_Stats
 cimport ParallelMPI
 
@@ -105,8 +103,6 @@ cdef class Microphysics_Arctic_1M:
             self.order = namelist['scalar_transport']['order_sedimentation']
         except:
             self.order = namelist['scalar_transport']['order']
-
-
         try:
             if namelist['microphysics']['phase_partitioning'] == 'liquid_only':
                 self.Lambda_fp = lambda_constant_Arctic
@@ -128,7 +124,6 @@ cdef class Microphysics_Arctic_1M:
             self.Lambda_fp = lambda_logistic
             LH.Lambda_fp = lambda_logistic
             Par.root_print('Using default logistic function as liquid fraction!')
-
         LH.L_fp = latent_heat_Arctic
 
         self.L_fp = latent_heat_Arctic
@@ -215,7 +210,6 @@ cdef class Microphysics_Arctic_1M:
             Py_ssize_t tw_shift = DV.get_varshift(Gr, 'temperature_wb')
             Py_ssize_t wqrain_shift = DV.get_varshift(Gr, 'w_qrain')
             Py_ssize_t wqsnow_shift = DV.get_varshift(Gr, 'w_qsnow')
-
             double [:] qrain_tend_micro = np.zeros((Gr.dims.npg,), dtype=np.double, order='c')
             double [:] qsnow_tend_micro = np.zeros((Gr.dims.npg,), dtype=np.double, order='c')
 
@@ -269,7 +263,6 @@ cdef class Microphysics_Arctic_1M:
 
         entropy_source_drag(&Gr.dims, &DV.values[t_shift], &PV.values[qsnow_shift], &DV.values[wqsnow_shift],
                             &PV.tendencies[s_shift])
-
 
         return
 
@@ -361,6 +354,7 @@ cdef class Microphysics_Arctic_1M:
         NS.write_profile('snow_sedimentation_flux', tmp[Gr.dims.gw:-Gr.dims.gw], Pa)
 
         get_virtual_potential_temperature(&Gr.dims, &Ref.p0_half[0], &DV.values[t_shift], &DV.values[qv_shift],
+
                                           &DV.values[ql_shift], &DV.values[qi_shift], &dummy[0])
         tmp = Pa.HorizontalMean(Gr, &dummy[0])
         NS.write_profile('thetav_mean', tmp[Gr.dims.gw:-Gr.dims.gw], Pa)
@@ -394,7 +388,6 @@ cdef class Microphysics_Arctic_1M:
 
     cpdef ice_stats(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, PrognosticVariables.PrognosticVariables PV,
                     DiagnosticVariables.DiagnosticVariables DV, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):
-
         cdef:
             Py_ssize_t kmin = 0
             Py_ssize_t kmax = Gr.dims.n[2]
@@ -433,7 +426,6 @@ cdef class Microphysics_Arctic_1M:
         qrain_pencils =  z_pencil.forward_double( &Gr.dims, Pa, &PV.values[qrain_shift])
         qsnow_pencils =  z_pencil.forward_double( &Gr.dims, Pa, &PV.values[qsnow_shift])
         ql_pencils =  z_pencil.forward_double( &Gr.dims, Pa, &DV.values[ql_shift])
-
 
         # Compute liquid, ice, rain, and snow water paths
         iwp = np.empty((z_pencil.n_local_pencils), dtype=np.double, order='c')

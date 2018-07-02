@@ -881,5 +881,4 @@ class FluxStatistics:
         NS.write_profile('sgs_z_flux_qt', qt_zsgs_mean[Gr.dims.gw:-Gr.dims.gw], Pa)
 
 
-
         return

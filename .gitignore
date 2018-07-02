@@ -5,7 +5,11 @@
 *.o
 *.c
 parameters.pxi
+<<<<<<< HEAD
 parameters_micro.pxi
+=======
+parameters_micro.pxi 
+>>>>>>> 1a81a01fc978a2613b63d4e655935e5ca9672674
 Csrc/parameters.h
 Csrc/parameters_micro.h
 *.idea

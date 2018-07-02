@@ -2,6 +2,7 @@ import numpy as np
 from collections import OrderedDict
 from scipy.special import gamma
 
+
 def main():
     default_arctic() #Generate the default microphysical parameters for the Arctic Mixed-Phase scheme
     return
@@ -21,6 +22,9 @@ def default_arctic():
     parameters['DENSITY_ICE'] = 900.0  # density of ice, kg/m^3
     parameters['DENSITY_LIQUID'] = 1000.0  # density of liquid, km/m^3
     parameters['MAX_ITER'] = 15 # max interation of micro source terms
+
+    # Liquid fraction power parameter
+    parameters['POW_N'] = 0.5
 
     # Rain parameters
     parameters['A_RAIN'] = np.pi/6.0*parameters['DENSITY_LIQUID']

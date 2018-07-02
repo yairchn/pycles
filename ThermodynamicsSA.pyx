@@ -23,10 +23,17 @@ cdef extern from "thermodynamics_sa.h":
     void eos_c(Lookup.LookupStruct *LT, double(*lam_fp)(double), double(*L_fp)(double, double), double p0, double s, double qt, double *T, double *qv, double *ql, double *qi) nogil
     void eos_update(Grid.DimStruct *dims, Lookup.LookupStruct *LT, double(*lam_fp)(double), double(*L_fp)(double, double), double *p0, double *s, double *qt, double *T,
                     double * qv, double * ql, double * qi, double * alpha)
+    void eos_update_thli(Grid.DimStruct *dims, Lookup.LookupStruct *LT, double(*lam_fp)(double), double(*L_fp)(double, double), double *p0, double *thli, double *qt, double *T,
+                    double * qv, double * ql, double * qi, double * qc, double * alpha)
+    void eos_update_thli_qr(Grid.DimStruct *dims, Lookup.LookupStruct *LT, double(*lam_fp)(double), double(*L_fp)(double, double), double *p0, double *thli, double *qt, double *qr, double *T,
+                    double * qv, double * ql, double * qi, double * qc, double * alpha)
+    void eos_update_thli_qs(Grid.DimStruct *dims, Lookup.LookupStruct *LT, double(*lam_fp)(double), double(*L_fp)(double, double), double *p0, double *thli, double *qt, double *qr, double *qs, double *T,
+                    double * qv, double * ql, double * qi, double * qc, double * alpha)
     void buoyancy_update_sa(Grid.DimStruct *dims, double *alpha0, double *alpha, double *buoyancy, double *wt)
     void bvf_sa(Grid.DimStruct * dims, Lookup.LookupStruct * LT, double(*lam_fp)(double), double(*L_fp)(double, double), double *p0, double *T, double *qt, double *qv, double *theta_rho, double *bvf)
     void thetali_update(Grid.DimStruct *dims, double (*lam_fp)(double), double (*L_fp)(double, double), double *p0, double *T, double *qt, double *ql, double *qi, double *thetali)
     void clip_qt(Grid.DimStruct *dims, double  *qt, double clip_value)
+    void compute_s(Grid.DimStruct *dims, Lookup.LookupStruct * LT, double (*lam_fp)(double), double (*L_fp)(double, double), double *p0, double *T, double *qt, double *ql, double *qi, double *s)
 
 cdef extern from "thermodynamic_functions.h":
     # Dry air partial pressure
@@ -66,6 +73,11 @@ cdef class ThermodynamicsSA:
         except:
             self.do_qt_clipping = True
 
+        try:
+            self.s_prognostic = namelist['thermodynamics']['s_prognostic']
+        except:
+            self.s_prognostic = True
+
         return
 
 
@@ -82,8 +94,14 @@ cdef class ThermodynamicsSA:
         :return:
         '''
 
-        PV.add_variable('s', 'J kg^-1 K^-1', 's', 'specific entropy', "sym", "scalar", Pa)
-        PV.add_variable('qt', 'kg/kg', 'q_t', 'total water mass fraction', "sym", "scalar", Pa)
+        if self.s_prognostic:
+            PV.add_variable('s', 'J kg^-1 K^-1', 's', 'specific entropy', "sym", "scalar", Pa)
+        else:
+            PV.add_variable('thli', 'K', r'\theta_l', r'liquid-ice potential temperature', "sym", "scalar", Pa)
+            DV.add_variables('s', 'J kg^-1 K^-1', 's', 'specific entropy', 'sym', Pa)
+            DV.add_variables('qc', 'kg/kg', 'q_c', 'specific humidity of condensate','sym', Pa)
+
+        PV.add_variable('qt', 'kg/kg', 'q_t', 'total water specific humidity', "sym", "scalar", Pa)
 
         # Initialize class member arrays
         DV.add_variables('buoyancy' ,r'ms^{-1}', r'b', 'buoyancy','sym', Pa)
@@ -152,7 +170,7 @@ cdef class ThermodynamicsSA:
             double Lambda = self.Lambda_fp(T)
             double L = self.L_fp(T, Lambda)
 
-        return sd_c(pd, T) * (1.0 - qt) + sv_c(pv, T) * qt + sc_c(L, T) * (ql + qi)
+        return sd_c(pd, T) * qd + sv_c(pv, T) * qt + sc_c(L, T) * (ql + qi)
 
     cpdef alpha(self, double p0, double T, double qt, double qv):
         '''
@@ -184,7 +202,11 @@ cdef class ThermodynamicsSA:
             Py_ssize_t ql_shift = DV.get_varshift(Gr, 'ql')
             Py_ssize_t qi_shift = DV.get_varshift(Gr, 'qi')
             Py_ssize_t qv_shift = DV.get_varshift(Gr, 'qv')
-            Py_ssize_t s_shift = PV.get_varshift(Gr, 's')
+            Py_ssize_t qc_shift
+            Py_ssize_t s_shift
+            Py_ssize_t thli_shift
+            Py_ssize_t qs_shift
+            Py_ssize_t qr_shift
             Py_ssize_t qt_shift = PV.get_varshift(Gr, 'qt')
             Py_ssize_t w_shift = PV.get_varshift(Gr, 'w')
             Py_ssize_t bvf_shift = DV.get_varshift(Gr, 'buoyancy_frequency')
@@ -200,7 +222,9 @@ cdef class ThermodynamicsSA:
             clip_qt(&Gr.dims, &PV.values[qt_shift], 1e-11)
 
 
-        eos_update(&Gr.dims, &self.CC.LT.LookupStructC, self.Lambda_fp, self.L_fp, &RS.p0_half[0],
+        if self.s_prognostic:
+            s_shift = PV.get_varshift(Gr, 's')
+            eos_update(&Gr.dims, &self.CC.LT.LookupStructC, self.Lambda_fp, self.L_fp, &RS.p0_half[0],
                     &PV.values[s_shift], &PV.values[qt_shift], &DV.values[t_shift], &DV.values[qv_shift], &DV.values[ql_shift],
                     &DV.values[qi_shift], &DV.values[alpha_shift])
 
@@ -210,6 +234,7 @@ cdef class ThermodynamicsSA:
                 &PV.values[qt_shift], &DV.values[qv_shift], &DV.values[thr_shift], &DV.values[bvf_shift])
 
         thetali_update(&Gr.dims,self.Lambda_fp, self.L_fp, &RS.p0_half[0], &DV.values[t_shift], &PV.values[qt_shift], &DV.values[ql_shift],&DV.values[qi_shift],&DV.values[thl_shift])
+
 
         return
 
@@ -268,27 +293,41 @@ cdef class ThermodynamicsSA:
             Py_ssize_t jmax = Gr.dims.nlg[1]
             Py_ssize_t kmax = Gr.dims.nlg[2]
             Py_ssize_t count
-            Py_ssize_t s_shift = PV.get_varshift(Gr, 's')
+            Py_ssize_t s_shift
             Py_ssize_t qt_shift = PV.get_varshift(Gr, 'qt')
             double[:] data = np.empty((Gr.dims.npg,), dtype=np.double, order='c')
             double[:] tmp
 
 
+        #If entropy is not a prognostic variable get it from the diagnostic variable class
+        if 's' in PV.name_index:
+            s_shift = PV.get_varshift(Gr, 's')
+            # Ouput profiles of thetas
+            with nogil:
+                count = 0
+                for i in range(imin, imax):
+                    ishift = i * istride
+                    for j in range(jmin, jmax):
+                        jshift = j * jstride
+                        for k in range(kmin, kmax):
+                            ijk = ishift + jshift + k
+                            data[count] = thetas_c(PV.values[s_shift + ijk], PV.values[qt_shift + ijk])
 
-        # Ouput profiles of thetas
-        with nogil:
-            count = 0
-            for i in range(imin, imax):
-                ishift = i * istride
-                for j in range(jmin, jmax):
-                    jshift = j * jstride
-                    for k in range(kmin, kmax):
-                        ijk = ishift + jshift + k
-                        data[count] = thetas_c(PV.values[s_shift + ijk], PV.values[qt_shift + ijk])
+                            count += 1
+        else:
+            s_shift = DV.get_varshift(Gr, 's')
+            # Ouput profiles of thetas
+            with nogil:
+                count = 0
+                for i in range(imin, imax):
+                    ishift = i * istride
+                    for j in range(jmin, jmax):
+                        jshift = j * jstride
+                        for k in range(kmin, kmax):
+                            ijk = ishift + jshift + k
+                            data[count] = thetas_c(DV.values[s_shift + ijk], PV.values[qt_shift + ijk])
 
-                        count += 1
-
-
+                            count += 1
 
         # Compute and write mean
 
@@ -466,8 +505,8 @@ cdef class ThermodynamicsSA:
             for pi in xrange(z_pencil.n_local_pencils):
                 for k in xrange(kmin, kmax):
                     if ql_pencils[pi, k] > 0.0:
-                        cb = fmin(cb, Gr.z_half[gw + k])
-                        ct = fmax(ct, Gr.z_half[gw + k])
+                        cb = fmin(cb, Gr.zp_half[gw + k])
+                        ct = fmax(ct, Gr.zp_half[gw + k])
 
         cb = Pa.domain_scalar_min(cb)
         ct = Pa.domain_scalar_max(ct)

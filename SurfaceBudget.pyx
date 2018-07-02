@@ -12,13 +12,15 @@ cimport Radiation
 cimport Surface
 from NetCDFIO cimport NetCDFIO_Stats
 import cython
-
+import cPickle
 cimport numpy as np
 import numpy as np
 include "parameters.pxi"
 
 def SurfaceBudgetFactory(namelist):
     if namelist['meta']['casename'] == 'ZGILS':
+        return SurfaceBudget(namelist)
+    elif namelist['meta']['casename'] == 'GCMFixed':
         return SurfaceBudget(namelist)
     else:
         return SurfaceBudgetNone()
@@ -38,13 +40,21 @@ cdef class SurfaceBudgetNone:
 cdef class SurfaceBudget:
     def __init__(self, namelist):
         try:
-            self.constant_sst = namelist['surface_budget']['constant_sst']
+            self.fixed_sst_time = namelist['surface_budget']['fixed_sst_time']
         except:
             self.constant_sst = False
         try:
             self.ocean_heat_flux = namelist['surface_budget']['ocean_heat_flux']
         except:
-            self.ocean_heat_flux = 0.0
+            file=namelist['gcm']['file']
+            fh = open(file, 'r')
+            tv_input_data = cPickle.load(fh)
+            fh.close()
+
+
+            self.ocean_heat_flux = tv_input_data['qflux'][0]
+            print 'Ocean heat flux set to: ', self.ocean_heat_flux
+
         try:
             self.water_depth_initial = namelist['surface_budget']['water_depth_initial']
         except:
@@ -79,8 +89,8 @@ cdef class SurfaceBudget:
             double mean_lhf = Pa.HorizontalMeanSurface(Gr, &Sur.lhf[0])
             double net_flux, tendency
 
-        if self.constant_sst:
-            return
+
+
         if TS.rk_step != 0:
             return
         if TS.t < self.fixed_sst_time:

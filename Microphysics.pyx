@@ -18,6 +18,7 @@ from NetCDFIO cimport NetCDFIO_Stats
 from Thermodynamics cimport LatentHeat, ClausiusClapeyron
 from thermodynamic_functions cimport cpm_c, pv_c, pd_c
 from libc.math cimport fmax, fmin, fabs
+from thermodynamic_functions cimport cpm_c, pv_c, pd_c
 include 'parameters.pxi'
 
 cdef extern from "microphysics.h":
@@ -105,12 +106,13 @@ cdef class No_Microphysics_SA:
             Py_ssize_t qv_shift = DV.get_varshift(Gr, 'qv')
             Py_ssize_t t_shift = DV.get_varshift(Gr, 'temperature')
             Py_ssize_t qt_shift = PV.get_varshift(Gr, 'qt')
-            Py_ssize_t s_shift  = PV.get_varshift(Gr, 's')
+            Py_ssize_t s_shift
             Py_ssize_t wqt_shift
             double[:] s_src =  np.zeros((Gr.dims.npg,), dtype=np.double, order='c')
             double[:] tmp
 
         if self.cloud_sedimentation:
+            s_shift  = PV.get_varshift(Gr, 's')
             wqt_shift = DV.get_varshift(Gr,'w_qt')
 
             compute_advective_fluxes_a(&Gr.dims, &Ref.rho0[0], &Ref.rho0_half[0], &DV.values[wqt_shift], &DV.values[ql_shift], &dummy[0], 2, self.order)
@@ -290,7 +292,6 @@ cdef class Microphysics_SB_Liquid:
     cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, Th, PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV, TimeStepping.TimeStepping TS, ParallelMPI.ParallelMPI Pa):
         cdef:
 
-
             Py_ssize_t t_shift = DV.get_varshift(Gr, 'temperature')
             Py_ssize_t ql_shift = DV.get_varshift(Gr,'ql')
             Py_ssize_t qv_shift = DV.get_varshift(Gr,'qv')
@@ -336,22 +337,32 @@ cdef class Microphysics_SB_Liquid:
 
         cdef:
             Py_ssize_t tw_shift = DV.get_varshift(Gr, 'temperature_wb')
-            Py_ssize_t s_shift = PV.get_varshift(Gr, 's')
+            Py_ssize_t s_shift
+            Py_ssize_t thli_shift
 
 
+        if 's' in PV.name_index:
 
-        microphysics_wetbulb_temperature(&Gr.dims, &self.CC.LT.LookupStructC, &Ref.p0_half[0], &PV.values[s_shift],
-                                         &PV.values[qt_shift], &DV.values[t_shift], &DV.values[tw_shift])
+            s_shift = PV.get_varshift(Gr, 's')
+            microphysics_wetbulb_temperature(&Gr.dims, &self.CC.LT.LookupStructC, &Ref.p0_half[0], &PV.values[s_shift],
+                                             &PV.values[qt_shift], &DV.values[t_shift], &DV.values[tw_shift])
 
-        sb_entropy_source_formation(&Gr.dims, &self.CC.LT.LookupStructC, self.Lambda_fp, self.L_fp, &Ref.p0_half[0],
-                                    &DV.values[t_shift], &DV.values[tw_shift], &PV.values[qt_shift], &DV.values[qv_shift],
-                                    &qr_tend_micro[0], &PV.tendencies[s_shift])
+            sb_entropy_source_formation(&Gr.dims, &self.CC.LT.LookupStructC, self.Lambda_fp, self.L_fp, &Ref.p0_half[0],
+                                        &DV.values[t_shift], &DV.values[tw_shift], &PV.values[qt_shift], &DV.values[qv_shift],
+                                        &qr_tend_micro[0], &PV.tendencies[s_shift])
 
 
-        sb_entropy_source_heating(&Gr.dims, &DV.values[t_shift], &DV.values[tw_shift], &PV.values[qr_shift],
-                                  &DV.values[wqr_shift],  &PV.values[w_shift], &PV.tendencies[s_shift])
+            sb_entropy_source_heating(&Gr.dims, &DV.values[t_shift], &DV.values[tw_shift], &PV.values[qr_shift],
+                                      &DV.values[wqr_shift],  &PV.values[w_shift], &PV.tendencies[s_shift])
 
-        sb_entropy_source_drag(&Gr.dims, &DV.values[t_shift], &PV.values[qr_shift], &DV.values[wqr_shift], &PV.tendencies[s_shift])
+            sb_entropy_source_drag(&Gr.dims, &DV.values[t_shift], &PV.values[qr_shift], &DV.values[wqr_shift], &PV.tendencies[s_shift])
+        else:
+            thli_shfit = PV.get_varshift(Gr, 'thli')
+            s_shift = DV.get_varshift(Gr, 's')
+
+            microphysics_wetbulb_temperature(&Gr.dims, &self.CC.LT.LookupStructC, &Ref.p0_half[0], &DV.values[s_shift],
+                                 &PV.values[qt_shift], &DV.values[t_shift], &DV.values[tw_shift])
+
 
 
         return
@@ -505,7 +516,7 @@ cdef cython_wetbulb(Grid.DimStruct *dims, Lookup.LookupStruct *LT, double *p0, d
     cdef:
         double T_1, T_2, T_n, pv_star_1, pv_star_2, qv_star_1, qv_star_2
         double pd_1, pd_2, s_1, s_2, f_1, f_2, delta_T
-    print('In wetbulb')
+
     cdef Py
 
     with nogil:
@@ -548,6 +559,7 @@ cdef cython_wetbulb(Grid.DimStruct *dims, Lookup.LookupStruct *LT, double *p0, d
 
     print('leaving wetbulb')
     return
+
 
 cdef class Microphysics_T_Liquid:
     def __init__(self, ParallelMPI.ParallelMPI Par, LatentHeat LH, namelist):
@@ -636,6 +648,7 @@ cdef class Microphysics_T_Liquid:
                    DiagnosticVariables.DiagnosticVariables DV, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):
 
         return
+
 
 
 def MicrophysicsFactory(namelist, LatentHeat LH, ParallelMPI.ParallelMPI Par):
