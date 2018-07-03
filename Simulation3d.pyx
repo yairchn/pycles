@@ -38,21 +38,13 @@ class Simulation3d:
         return
 
     def initialize(self, namelist):
-        print '41'
         self.Pa = ParallelMPI.ParallelMPI(namelist)
-        print '43'
         self.Gr = Grid.Grid(namelist, self.Pa)
-        print '45'
         self.PV = PrognosticVariables.PrognosticVariables(self.Gr)
-        print '47'
         self.Ke = Kinematics.Kinematics()
-        print '49'
         self.DV = DiagnosticVariables.DiagnosticVariables()
-        print '51'
         self.Pr = PressureSolver.PressureSolver()
-        print '53'
         self.LH = LatentHeat(namelist, self.Pa)
-        print '55'
         self.Micro = MicrophysicsFactory(namelist, self.LH, self.Pa)
         print '57'
         self.SA = ScalarAdvection.ScalarAdvection(namelist, self.LH, self.Pa)

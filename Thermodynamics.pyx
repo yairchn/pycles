@@ -43,6 +43,7 @@ cdef class ClausiusClapeyron:
     def initialize(self, namelist, LatentHeat LH, ParallelMPI.ParallelMPI Par):
         self.LT = Lookup.Lookup()
 
+
         #Now integrate the ClausiusClapeyron equation
         cdef:
             double Tmin
@@ -97,7 +98,8 @@ cdef class ClausiusClapeyron:
 
         #set the initial condition
         pv0 = np.log(pv_star_t)
-
+        print odeint(rhs,pv0,T_above_Tt)
+        print 'odeint(rhs,pv0,T_above_Tt,hmax=0.1)[1:]'
         #Integrate
         pv_above_Tt = np.exp(odeint(rhs,pv0,T_above_Tt,hmax=0.1)[1:])
         pv_below_Tt = np.exp(odeint(rhs,pv0,T_below_Tt,hmax=0.1)[1:])[::-1]

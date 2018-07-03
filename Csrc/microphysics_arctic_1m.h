@@ -466,6 +466,9 @@ void microphysics_sources(const struct DimStruct *dims, struct LookupStruct *LT,
 
                     ql_tendency_acc = 0.0;
                     qi_tendency_acc = 0.0;
+                    precip_tmp = 0.0;
+                    evap_tmp = 0.0;
+
                     autoconversion_rain(density[k], ccn, ql_tmp, qrain_tmp, nrain[ijk], &qrain_tendency_aut);
                     autoconversion_snow(LT, lam_fp, L_fp, density[k], p0[k], temperature[ijk], qt_tmp,
                                         qi_tmp, ni, &qsnow_tendency_aut);
