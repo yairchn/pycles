@@ -278,7 +278,7 @@ cdef class NetCDFIO_Fields:
         self.diagnostic_fields = namelist['fields_io']['diagnostic_fields']
 
         # Setup the statistics output path
-        outpath = str(os.path.join(namelist['output']['output_root'] + 'Output.' + namelist['meta']['simname'] + '.' + self.uuid[:]))
+        outpath = str(os.path.join(namelist['output']['output_root'] + 'Output.' + namelist['meta']['simname'] + '.' + self.uuid[-5:]))
         self.fields_path = str(os.path.join(outpath, namelist['fields_io']['fields_dir']))
         if Pa.rank == 0:
             try:
@@ -322,21 +322,6 @@ cdef class NetCDFIO_Fields:
 
         fieldgrp.createDimension('nl', np.int(Gr.dims.npl))
         dimgrp.createDimension('d1', 1)
-
-        dimgrp.createDimension('x', np.int(Gr.dims.n[0]))
-        dimgrp.createDimension('y', np.int(Gr.dims.n[1]))
-        dimgrp.createDimension('z', np.int(Gr.dims.n[2]))
-
-
-        x = dimgrp.createVariable('x', 'f8', ('x'))
-        y = dimgrp.createVariable('y', 'f8', ('y'))
-        z = dimgrp.createVariable('z', 'f8', ('z'))
-
-
-
-        x[:] = np.array(Gr.x_half[Gr.dims.gw:-Gr.dims.gw],dtype=np.double)
-        y[:] = np.array(Gr.y_half[Gr.dims.gw:-Gr.dims.gw],dtype=np.double)
-        z[:] = np.array(Gr.zp_half[Gr.dims.gw:-Gr.dims.gw],dtype=np.double)
 
         nl_0 = dimgrp.createVariable('nl_0', 'i4', ('d1'))
         nl_1 = dimgrp.createVariable('nl_1', 'i4', ('d1'))
@@ -449,6 +434,7 @@ cdef class NetCDFIO_Fields:
         var[:] = np.array(data)
         rootgrp.close()
         return
+
 
 
 
