@@ -108,6 +108,8 @@ cdef class UpdraftTracers:
                        desc=r'updraft vertical velocity at cell centers')
         NS.add_profile('updraft_w2', Gr, Pa, units=r'm^{2} s^{-2}', nice_name=r'w^2_u',
                        desc=r'updraft vertical velocity square at cell centers')
+        NS.add_profile('updraft_w3', Gr, Pa, units=r'm^{3} s^{-3}', nice_name=r'w^3_u',
+                       desc=r'updraft vertical velocity cube at cell centers')
         NS.add_profile('updraft_u', Gr, Pa, units=r'm s^{-1}', nice_name=r'u_u',
                        desc=r'updraft u velocity')
         NS.add_profile('updraft_u2', Gr, Pa, units=r'm^{2} s^{-2}', nice_name=r'u^2_u',
@@ -120,14 +122,20 @@ cdef class UpdraftTracers:
                        desc=r'updraft total water specific humidity')
         NS.add_profile('updraft_qt2', Gr, Pa, units=r'kg^{2} kg^{-2}',nice_name=r'q_{t,u}^2',
                        desc=r'updraft total water specific humidity square')
+        NS.add_profile('updraft_qt3', Gr, Pa, units=r'kg^{3} kg^{-3}',nice_name=r'q_{t,u}^3',
+                       desc=r'updraft total water specific humidity cube')
         NS.add_profile('updraft_thetali', Gr, Pa, units=r'K', nice_name=r'\theta_{li,u}',
                        desc=r'updraft liquid ice potential temperature')
         NS.add_profile('updraft_thetali2', Gr, Pa, units=r'K^2', nice_name=r'\theta_{li,u}^2',
                        desc=r'updraft liquid ice potential temperature square')
+        NS.add_profile('updraft_thetali3', Gr, Pa, units=r'K^3', nice_name=r'\theta_{li,u}^3',
+                       desc=r'updraft liquid ice potential temperature cube')
         NS.add_profile('updraft_b', Gr, Pa, units=r'm s^{-2}', nice_name=r'b_{u}',
                        desc=r'updraft buoyancy (not anomaly)')
         NS.add_profile('updraft_b2', Gr, Pa, units=r'm s^{-2}', nice_name=r'b_{u}^2',
                        desc=r'updraft buoyancy (not anomaly) square')
+        NS.add_profile('updraft_b3', Gr, Pa, units=r'm s^{-3}', nice_name=r'b_{u}^3',
+                       desc=r'updraft buoyancy (not anomaly) cube')
         NS.add_profile('updraft_w_qt', Gr, Pa, units=r' m s^{-1} kg kg^{-1}', nice_name=r'(w q_t)_u',
                        desc=r'updraft product of w and q_t')
         NS.add_profile('updraft_w_thetali', Gr, Pa, units=r' m s^{-1} K', nice_name=r'(w \theta_{li})_u',
@@ -146,6 +154,8 @@ cdef class UpdraftTracers:
                        desc=r'updraft temperature')
         NS.add_profile('updraft_temperature2', Gr, Pa, units=r'K^2', nice_name=r'T_{u}^2',
                        desc=r'updraft temperature square')
+        NS.add_profile('updraft_temperature3', Gr, Pa, units=r'K^3', nice_name=r'T_{u}^3',
+                       desc=r'updraft temperature cube')
         NS.add_profile('updraft_qv', Gr, Pa, units=r'kg kg^{-1}',nice_name=r'q_{v,u}',
                        desc=r'updraft vapor specific humidity')
         NS.add_profile('updraft_qv2', Gr, Pa, units=r'kg^{2} kg^{-2}',nice_name=r'q_{v,u}^2',
@@ -431,6 +441,9 @@ cdef class UpdraftTracers:
         tmp = Pa.HorizontalMeanofSquaresConditional(Gr, &w_half[0], &w_half[0], &self.updraft_indicator[0])
         NS.write_profile('updraft_w2', tmp[Gr.dims.gw:-Gr.dims.gw], Pa)
 
+        tmp = Pa.HorizontalMeanofCubeConditional(Gr, &w_half[0], &w_half[0], &w_half[0], &self.updraft_indicator[0])
+        NS.write_profile('updraft_w3', tmp[Gr.dims.gw:-Gr.dims.gw], Pa)
+
         tmp = Pa.HorizontalMeanConditional(Gr, &u_half[0], &self.updraft_indicator[0])
         NS.write_profile('updraft_u', tmp[Gr.dims.gw:-Gr.dims.gw], Pa)
         tmp = Pa.HorizontalMeanofSquaresConditional(Gr, &u_half[0], &u_half[0], &self.updraft_indicator[0])
@@ -445,6 +458,8 @@ cdef class UpdraftTracers:
         NS.write_profile('updraft_qt', tmp[Gr.dims.gw:-Gr.dims.gw], Pa)
         tmp = Pa.HorizontalMeanofSquaresConditional(Gr, &PV.values[q_shift], &PV.values[q_shift], &self.updraft_indicator[0])
         NS.write_profile('updraft_qt2', tmp[Gr.dims.gw:-Gr.dims.gw], Pa)
+        tmp = Pa.HorizontalMeanofCubeConditional(Gr, &PV.values[q_shift], &PV.values[q_shift], &PV.values[q_shift], &self.updraft_indicator[0])
+        NS.write_profile('updraft_qt3', tmp[Gr.dims.gw:-Gr.dims.gw], Pa)
 
         if 'thetali' in DV.name_index:
             th_shift = DV.get_varshift(Gr, 'thetali')
@@ -455,10 +470,14 @@ cdef class UpdraftTracers:
         NS.write_profile('updraft_thetali', tmp[Gr.dims.gw:-Gr.dims.gw], Pa)
         tmp = Pa.HorizontalMeanofSquaresConditional(Gr, &DV.values[th_shift], &DV.values[th_shift], &self.updraft_indicator[0])
         NS.write_profile('updraft_thetali2', tmp[Gr.dims.gw:-Gr.dims.gw], Pa)
+        tmp = Pa.HorizontalMeanofCubeConditional(Gr, &DV.values[th_shift], &DV.values[th_shift], &DV.values[th_shift], &self.updraft_indicator[0])
+        NS.write_profile('updraft_thetali3', tmp[Gr.dims.gw:-Gr.dims.gw], Pa)
         tmp = Pa.HorizontalMeanConditional(Gr, &DV.values[b_shift], &self.updraft_indicator[0])
         NS.write_profile('updraft_b', tmp[Gr.dims.gw:-Gr.dims.gw], Pa)
         tmp = Pa.HorizontalMeanofSquaresConditional(Gr, &DV.values[b_shift], &DV.values[b_shift], &self.updraft_indicator[0])
         NS.write_profile('updraft_b2', tmp[Gr.dims.gw:-Gr.dims.gw], Pa)
+        tmp = Pa.HorizontalMeanofCubeConditional(Gr, &DV.values[b_shift], &DV.values[b_shift], &DV.values[b_shift], &self.updraft_indicator[0])
+        NS.write_profile('updraft_b3', tmp[Gr.dims.gw:-Gr.dims.gw], Pa)
 
         tmp = Pa.HorizontalMeanofSquaresConditional(Gr, &w_half[0], &PV.values[q_shift], &self.updraft_indicator[0])
         NS.write_profile('updraft_w_qt', tmp[Gr.dims.gw:-Gr.dims.gw], Pa)
@@ -474,6 +493,8 @@ cdef class UpdraftTracers:
         NS.write_profile('updraft_temperature', tmp[Gr.dims.gw:-Gr.dims.gw], Pa)
         tmp = Pa.HorizontalMeanofSquaresConditional(Gr, &DV.values[t_shift], &DV.values[t_shift], &self.updraft_indicator[0])
         NS.write_profile('updraft_temperature2', tmp[Gr.dims.gw:-Gr.dims.gw], Pa)
+        tmp = Pa.HorizontalMeanofCubeConditional(Gr, &DV.values[t_shift], &DV.values[t_shift], &DV.values[t_shift], &self.updraft_indicator[0])
+        NS.write_profile('updraft_temperature3', tmp[Gr.dims.gw:-Gr.dims.gw], Pa)
 
         tmp = Pa.HorizontalMeanConditional(Gr, &DV.values[qv_shift], &self.updraft_indicator[0])
         NS.write_profile('updraft_qv', tmp[Gr.dims.gw:-Gr.dims.gw], Pa)
