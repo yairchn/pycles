@@ -46,39 +46,22 @@ class Simulation3d:
         self.Pr = PressureSolver.PressureSolver()
         self.LH = LatentHeat(namelist, self.Pa)
         self.Micro = MicrophysicsFactory(namelist, self.LH, self.Pa)
-        print '57'
         self.SA = ScalarAdvection.ScalarAdvection(namelist, self.LH, self.Pa)
-        print '59'
         self.MA = MomentumAdvection.MomentumAdvection(namelist, self.Pa)
-        print '61'
         self.SGS = SGS.SGS(namelist)
-        print '63'
         self.SD = ScalarDiffusion.ScalarDiffusion(namelist, self.LH, self.DV, self.Pa)
-        print '65'
         self.MD = MomentumDiffusion.MomentumDiffusion(self.DV, self.Pa)
-        print '67'
         self.Th = ThermodynamicsFactory(namelist, self.Micro, self.LH, self.Pa)
-        print '69'
         self.Ref = ReferenceState.ReferenceState(self.Gr)
-        print '71'
         self.Sur = SurfaceFactory(namelist, self.LH, self.Pa)
-        print '73'
         self.Fo = Forcing.Forcing(namelist, self.LH, self.Pa)
-        print '75'
         self.Ra = RadiationFactory(namelist,self.LH, self.Pa)
-        print '77'
         self.Budg = SurfaceBudgetFactory(namelist)
-        print '79'
         self.StatsIO = NetCDFIO.NetCDFIO_Stats()
-        print '81'
         self.FieldsIO = NetCDFIO.NetCDFIO_Fields()
-        print '83'
         self.CondStatsIO = NetCDFIO.NetCDFIO_CondStats()
-        print '85'
         self.Restart = Restart.Restart(namelist, self.Pa)
-        print '87'
         self.VO = VisualizationOutput.VisualizationOutput(namelist, self.Pa)
-        print '89'
         self.Damping = Damping.Damping(namelist, self.Pa)
         self.TS = TimeStepping.TimeStepping()
         self.Tr = TracersFactory(namelist)
@@ -164,7 +147,7 @@ class Simulation3d:
         # DO First Output
         self.Th.update(self.Gr, self.Ref, PV_, DV_)
         self.Sur.update(self.Gr, self.Ref,self.PV, self.DV,self.Pa,self.TS) # ?
-        self.Fo.update(self.Gr, self.Ref, self.PV, self.DV, self.TS, self.Pa) # ?
+        self.Fo.update(self.Gr, self.Ref, self.PV, self.DV, self.Pa,self.TS) # ?
         self.Ra.initialize_profiles(self.Gr, self.Ref, self.DV, self.StatsIO,self.Pa)
         self.Ra.update(self.Gr, self.Ref, self.PV, self.DV, self.Sur, self.TS, self.Pa) # ?
         self.Damping.update(self.Gr, self.Ref,self.PV, self.DV, self.Pa, self.TS) # ?

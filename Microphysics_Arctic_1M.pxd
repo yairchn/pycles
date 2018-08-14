@@ -26,7 +26,7 @@ cdef inline double lambda_Arctic(double T) nogil:
     cdef:
         double Twarm = 273.0
         double Tcold = 235.0
-        double pow_n = 0.1
+        double pow_n = 1.0 # yair - I changed this for a linear relation to deep convection
         double Lambda = 0.0
 
     if T >= Tcold and T <= Twarm:

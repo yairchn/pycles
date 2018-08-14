@@ -92,14 +92,13 @@ cdef class ClausiusClapeyron:
 
         #Now set up the RHS
         def rhs(z,T_):
-            lam = LH.Lambda(T_)
+            lam = 0.1# LH.Lambda(T_)
+            print lam
             L = LH.L(T_,lam)
             return L/(Rv * T_ * T_)
 
         #set the initial condition
         pv0 = np.log(pv_star_t)
-        print odeint(rhs,pv0,T_above_Tt)
-        print 'odeint(rhs,pv0,T_above_Tt,hmax=0.1)[1:]'
         #Integrate
         pv_above_Tt = np.exp(odeint(rhs,pv0,T_above_Tt,hmax=0.1)[1:])
         pv_below_Tt = np.exp(odeint(rhs,pv0,T_below_Tt,hmax=0.1)[1:])[::-1]
