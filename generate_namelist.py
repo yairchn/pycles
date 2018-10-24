@@ -156,7 +156,7 @@ def SullivanPatton():
 
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = True
-    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['scheme'] = 'UpdraftTracers'
     namelist['tracers']['use_lcl_tracers'] = True
 
     return namelist
@@ -240,7 +240,7 @@ def SaturatedBubble():
 
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = True
-    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['scheme'] = 'UpdraftTracers'
     namelist['tracers']['use_lcl_tracers'] = True
 
     return namelist
@@ -324,7 +324,7 @@ def StableBubble():
 
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = True
-    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['scheme'] = 'UpdraftTracers'
     namelist['tracers']['use_lcl_tracers'] = True
 
     return namelist
@@ -414,7 +414,7 @@ def Bomex():
 
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = True
-    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['scheme'] = 'UpdraftTracers'
     namelist['tracers']['use_lcl_tracers'] = True
 
     return namelist
@@ -504,7 +504,7 @@ def Gabls():
 
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = True
-    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['scheme'] = 'UpdraftTracers'
     namelist['tracers']['use_lcl_tracers'] = True
 
     return namelist
@@ -603,7 +603,7 @@ def DYCOMS_RF01():
 
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = True
-    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['scheme'] = 'UpdraftTracers'
     namelist['tracers']['use_lcl_tracers'] = True
 
     return namelist
@@ -697,7 +697,7 @@ def DYCOMS_RF02():
 
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = True
-    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['scheme'] = 'UpdraftTracers'
     namelist['tracers']['use_lcl_tracers'] = True
 
     return namelist
@@ -793,7 +793,7 @@ def SMOKE():
 
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = True
-    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['scheme'] = 'UpdraftTracers'
     namelist['tracers']['use_lcl_tracers'] = True
 
     return namelist
@@ -888,7 +888,7 @@ def Rico():
 
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = True
-    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['scheme'] = 'UpdraftTracers'
     namelist['tracers']['use_lcl_tracers'] = True
 
     return namelist
@@ -980,7 +980,7 @@ def Isdac():
 
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = True
-    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['scheme'] = 'UpdraftTracers'
     namelist['tracers']['use_lcl_tracers'] = True
 
     return namelist
@@ -1086,7 +1086,7 @@ def IsdacCC():
 
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = True
-    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['scheme'] = 'UpdraftTracers'
     namelist['tracers']['use_lcl_tracers'] = True
 
     return namelist
@@ -1181,7 +1181,7 @@ def Mpace():
 
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = True
-    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['scheme'] = 'UpdraftTracers'
     namelist['tracers']['use_lcl_tracers'] = True
 
     return namelist
@@ -1279,7 +1279,7 @@ def Sheba():
 
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = True
-    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['scheme'] = 'UpdraftTracers'
     namelist['tracers']['use_lcl_tracers'] = True
 
     return namelist
@@ -1405,7 +1405,7 @@ def CGILS_S6(is_p2,is_ctl_omega):
 
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = True
-    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['scheme'] = 'UpdraftTracers'
     namelist['tracers']['use_lcl_tracers'] = True
 
     return namelist
@@ -1530,7 +1530,7 @@ def CGILS_S11(is_p2,is_ctl_omega):
 
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = True
-    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['scheme'] = 'UpdraftTracers'
     namelist['tracers']['use_lcl_tracers'] = True
 
     return namelist
@@ -1653,7 +1653,7 @@ def CGILS_S12(is_p2,is_ctl_omega):
 
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = True
-    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['scheme'] = 'UpdraftTracers'
     namelist['tracers']['use_lcl_tracers'] = True
 
     return namelist
@@ -1778,7 +1778,7 @@ def ZGILS(zgils_loc):
 
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = True
-    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['scheme'] = 'UpdraftTracers'
     namelist['tracers']['use_lcl_tracers'] = True
 
     return namelist
@@ -1833,7 +1833,7 @@ def TRMM_LBA():
 
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = True
-    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['scheme'] = 'UpdraftTracers'
     namelist['tracers']['use_lcl_tracers'] = True
 
     namelist['diffusion'] = {}
@@ -2014,7 +2014,7 @@ def ARM_SGP():
 
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = True
-    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['scheme'] = 'UpdraftTracers'
     namelist['tracers']['use_lcl_tracers'] = True
 
     namelist['diffusion'] = {}
@@ -2104,7 +2104,7 @@ def GATE_III():
 
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = True
-    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['scheme'] = 'UpdraftTracers'
     namelist['tracers']['use_lcl_tracers'] = True
 
     namelist['diffusion'] = {}
