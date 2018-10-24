@@ -148,7 +148,7 @@ class Simulation3d:
         self.Th.update(self.Gr, self.Ref, PV_, DV_)
         self.Sur.update(self.Gr, self.Ref,self.PV, self.DV,self.Pa,self.TS) # ?
         self.Fo.update(self.Gr, self.Ref, self.PV, self.DV, self.Pa,self.TS) # ?
-        self.Ra.initialize_profiles(self.Gr, self.Ref, self.DV, self.StatsIO,self.Pa)
+        self.Ra.initialize_profiles(self.Gr, self.Ref, self.Th , self.DV, self.Sur,self.Pa)
         self.Ra.update(self.Gr, self.Ref, self.PV, self.DV, self.Sur, self.TS, self.Pa) # ?
         self.Damping.update(self.Gr, self.Ref,self.PV, self.DV, self.Pa, self.TS) # ?
 
@@ -167,7 +167,7 @@ class Simulation3d:
                 self.MA.update(self.Gr,self.Ref,PV_,self.Pa)
                 self.Sur.update(self.Gr, self.Ref,self.PV, self.DV,self.Pa,self.TS)
                 self.SGS.update(self.Gr,self.DV,self.PV, self.Ke, self.Sur,self.Pa)
-                self.Damping.update(self.Gr, self.Ref,self.PV, self.DV, self.Pa)
+                self.Damping.update(self.Gr, self.Ref,self.PV, self.DV, self.Pa, self.TS)
                 self.SD.update(self.Gr,self.Ref,self.PV,self.DV)
                 self.MD.update(self.Gr,self.Ref,self.PV,self.DV,self.Ke)
                 self.Fo.update(self.Gr, self.Ref, self.PV, self.DV, self.Pa, self.TS)

@@ -16,7 +16,6 @@ cimport DiagnosticVariables
 cimport TimeStepping
 from NetCDFIO cimport NetCDFIO_Stats
 from Thermodynamics cimport LatentHeat, ClausiusClapeyron
-from thermodynamic_functions cimport cpm_c, pv_c, pd_c
 from libc.math cimport fmax, fmin, fabs
 from thermodynamic_functions cimport cpm_c, pv_c, pd_c
 include 'parameters.pxi'
@@ -643,19 +642,13 @@ cdef class Microphysics_T_Liquid:
 
 
 def MicrophysicsFactory(namelist, LatentHeat LH, ParallelMPI.ParallelMPI Par):
-    print 'MF 646'
     if(namelist['microphysics']['scheme'] == 'None_Dry'):
-        print 'MF 648'
         return No_Microphysics_Dry(Par, LH, namelist)
     elif(namelist['microphysics']['scheme'] == 'None_SA'):
-        print 'MF 651'
         return No_Microphysics_SA(Par, LH, namelist)
     elif(namelist['microphysics']['scheme'] == 'SB_Liquid'):
-        print 'MF 654'
         return Microphysics_SB_Liquid(Par, LH, namelist)
     elif(namelist['microphysics']['scheme'] == 'Arctic_1M'):
-        print 'MF 657'
         return Microphysics_Arctic_1M(Par, LH, namelist)
     elif(namelist['microphysics']['scheme'] == 'T_Liquid'):
-        print 'MF 660'
         return Microphysics_T_Liquid(Par, LH, namelist)

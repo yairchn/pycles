@@ -47,7 +47,7 @@ cdef class ClausiusClapeyron:
         #Now integrate the ClausiusClapeyron equation
         cdef:
             double Tmin
-            double Tmax
+            double Tmax,a
             long n_lookup
             double [:] pv
 
@@ -99,11 +99,10 @@ cdef class ClausiusClapeyron:
 
         #set the initial condition
         pv0 = np.log(pv_star_t)
-        #Integrate
-        pv_above_Tt = np.exp(odeint(rhs,pv0,T_above_Tt,hmax=0.1)[1:])
         pv_below_Tt = np.exp(odeint(rhs,pv0,T_below_Tt,hmax=0.1)[1:])[::-1]
-        pv = np.append(pv_below_Tt,pv_above_Tt )
+        pv_above_Tt = np.exp(odeint(rhs,pv0,T_above_Tt,hmax=0.1)[1:])
 
+        pv = np.append(pv_below_Tt,pv_above_Tt )
         #For really small values of pv, set pv to a slightly less small number. This avoids problems in integrating
         #the reference profiles, when the reference temperature is <100K. For the vast majority of simulations this
         #modification should have no impact.

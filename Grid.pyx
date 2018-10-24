@@ -54,8 +54,6 @@ cdef class Grid:
                 self.stretch_scale = 8000.0 #[m]
         else:
             self.stretch_scale = 0.0
-
-
         #Compute the global and local dims
         self.compute_global_dims()
         self.compute_local_dims(Parallel)
@@ -160,6 +158,7 @@ cdef class Grid:
             beta =  1.0/ self.stretch_scale
             self.dims.dx[2] = (1.0/beta) * np.log(zp_max * (np.exp(beta)-1) + 1)/self.dims.n[2]
             self.dims.dxi[2] = 1.0/self.dims.dx[2]
+            print self.dims.dx[2]
         else:
             pass
 
