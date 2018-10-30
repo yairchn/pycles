@@ -137,6 +137,7 @@ class Simulation3d:
         return
 
     def run(self):
+        print '======================= run '
         cdef PrognosticVariables.PrognosticVariables PV_ = self.PV
         cdef DiagnosticVariables.DiagnosticVariables DV_ = self.DV
         PV_.Update_all_bcs(self.Gr, self.Pa)
@@ -172,7 +173,6 @@ class Simulation3d:
                 self.MD.update(self.Gr,self.Ref,self.PV,self.DV,self.Ke)
                 self.Fo.update(self.Gr, self.Ref, self.PV, self.DV, self.Pa, self.TS)
                 self.Ra.update(self.Gr, self.Ref, self.PV, self.DV, self.Sur, self.TS, self.Pa)
-                #print 'Budg'
                 self.Budg.update(self.Gr,self.Ra, self.Sur, self.TS, self.Pa)
                 self.Tr.update_cleanup(self.Gr, self.Ref, PV_, DV_, self.Pa, self.TS)
                 self.TS.update(self.Gr, self.PV, self.Pa)
