@@ -476,9 +476,9 @@ cdef class SurfaceLifecycle_Tan2018(SurfaceBase):
                     ijk = i * istride + j * jstride + gw
                     ij = i * istride_2d + j
                     self.friction_velocity[ij] = self.ustar_
-                    LHF = weight_factor*self.theta_flux
-                    SHF = weight_factor*self.qt_flux[ij]
-                    self.s_flux[ij] = entropyflux_from_thetaflux_qtflux(LHF, SHF, Ref.p0_half[gw],
+                    SHF = weight_factor*self.theta_flux
+                    LHF = weight_factor*self.qt_flux[ij]
+                    self.s_flux[ij] = entropyflux_from_thetaflux_qtflux(SHF, LHF, Ref.p0_half[gw],
                                                                         DV.values[temp_shift+ijk], PV.values[qt_shift+ijk], DV.values[qv_shift+ijk])
 
         cdef:
