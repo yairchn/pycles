@@ -36,7 +36,7 @@ cdef class Forcing:
         casename = namelist['meta']['casename']
         if casename == 'SullivanPatton':
             self.scheme = ForcingSullivanPatton()
-        elif casename == 'Bomex':
+        elif casename == 'Bomex' or casename == 'lifecycle_2018':
             self.scheme = ForcingBomex()
         elif casename == 'Gabls':
             self.scheme = ForcingGabls()
