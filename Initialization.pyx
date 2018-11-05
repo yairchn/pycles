@@ -30,7 +30,7 @@ def InitializationFactory(namelist):
             return InitStableBubble
         elif casename == 'SaturatedBubble':
             return InitSaturatedBubble
-        elif casename == 'Bomex' or casename == 'lifecycle_2018':
+        elif casename == 'Bomex' or casename == 'lifecycle_Tan2018':
             return InitBomex
         elif casename == 'Gabls':
             return InitGabls
