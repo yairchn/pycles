@@ -468,7 +468,7 @@ cdef class SurfaceLifecycle_Tan2018(SurfaceBase):
             Py_ssize_t qv_shift = DV.get_varshift(Gr,'qv')
             double weight_factor, LHF, SHF
 
-        weight_factor = 0.01 + 0.99 *(cos(2.0*pi * TS.t /3600.0) + 1.0)/2.0
+        weight_factor = 0.01 + 0.99 *(cos(2.0*pi * TS.t /7200.0) + 1.0)/2.0
         # Get the scalar flux
         with nogil:
             for i in xrange(imax):
