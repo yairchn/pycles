@@ -1469,9 +1469,9 @@ cdef class RadiationTRMM_LBA(RadiationBase):
 
 
         # build a matrix of interpulated radiative forcing
-        A = np.interp(Gr.zl_half,self.z_in,self.rad_in[0,:]) # Gr.zl_half,self.rad
+        A = np.interp(Gr.zpl_half,self.z_in,self.rad_in[0,:]) # Gr.zl_half,self.rad
         for tt in range(1,36):
-            A = np.vstack((A, np.interp(Gr.zl_half,self.z_in,self.rad_in[tt,:])))
+            A = np.vstack((A, np.interp(Gr.zpl_half,self.z_in,self.rad_in[tt,:])))
         self.rad = A # store matrix in self
         return
 
@@ -1496,7 +1496,7 @@ cdef class RadiationTRMM_LBA(RadiationBase):
                     self.rad_cool[kk] = self.rad[ind1,kk]
             else: # in all other cases - interpolate
                 for kk in range(0,Gr.dims.nlg[2]):
-                    if Gr.zl_half[kk] < 22699.48:
+                    if Gr.zpl_half[kk] < 22699.48:
                         self.rad_cool[kk]    = (self.rad[ind2,kk]-self.rad[ind1,kk])/(self.rad_time[ind2]-self.rad_time[ind1])*(TS.t/60.0-self.rad_time[ind1])+self.rad[ind1,kk] # yair check the impact of the dt typo
                     else:
                         self.rad_cool[kk] = 0.1
