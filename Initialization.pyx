@@ -138,7 +138,7 @@ def InitStableBubble(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariab
                     PV.values[u_varshift + ijk] = 0.0
                     PV.values[v_varshift + ijk] = 0.0
                     PV.values[w_varshift + ijk] = 0.0
-                    dist  = np.sqrt(((Gr.x_half[i + Gr.dims.indx_lo[0]]/1000.0 - 25.6)/4.0)**2.0 + ((Gr.z_half[k + Gr.dims.indx_lo[2]]/1000.0 - 3.0)/2.0)**2.0)
+                    dist  = np.sqrt(((Gr.x_half[i + Gr.dims.indx_lo[0]]/1000.0 - 25.6)/4.0)**2.0 + ((Gr.zp_half[k + Gr.dims.indx_lo[2]]/1000.0 - 3.0)/2.0)**2.0)
                     dist = fmin(dist,1.0)
                     t = (300.0 )*exner_c(RS.p0_half[k]) - 15.0*( cos(np.pi * dist) + 1.0) /2.0
                     PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k],t,0.0,0.0,0.0)
@@ -152,7 +152,7 @@ def InitStableBubble(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariab
                     PV.values[u_varshift + ijk] = 0.0
                     PV.values[v_varshift + ijk] = 0.0
                     PV.values[w_varshift + ijk] = 0.0
-                    dist  = np.sqrt(((Gr.x_half[i + Gr.dims.indx_lo[0]]/1000.0 - 25.6)/4.0)**2.0 + ((Gr.z_half[k + Gr.dims.indx_lo[2]]/1000.0 - 3.0)/2.0)**2.0)
+                    dist  = np.sqrt(((Gr.x_half[i + Gr.dims.indx_lo[0]]/1000.0 - 25.6)/4.0)**2.0 + ((Gr.zp_half[k + Gr.dims.indx_lo[2]]/1000.0 - 3.0)/2.0)**2.0)
                     dist = fmin(dist,1.0)
                     t = (300.0 )*exner_c(RS.p0_half[k]) - 15.0*( cos(np.pi * dist) + 1.0) /2.0
                     PV.values[thli_varshift + ijk] = thetali_c(RS.p0_half[k], t, 0.0, 0.0, 0.0, Th.get_lh(t))
@@ -1879,11 +1879,11 @@ def InitTRMM_LBA(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables 
         double [:] u = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
         double [:] v = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
 
-    T = np.interp(Gr.z_half,z_in,T_in)
-    p = np.interp(Gr.z_half,z_in,p_in)
-    RH = np.interp(Gr.z_half,z_in,RH_in)
-    u = np.interp(Gr.z_half,z_in,u_in)
-    v = np.interp(Gr.z_half,z_in,v_in)
+    T = np.interp(Gr.zp_half,z_in,T_in)
+    p = np.interp(Gr.zp_half,z_in,p_in)
+    RH = np.interp(Gr.zp_half,z_in,RH_in)
+    u = np.interp(Gr.zp_half,z_in,u_in)
+    v = np.interp(Gr.zp_half,z_in,v_in)
 
       #Set velocities for Galilean transformation
     RS.u0 = 0.5 * (np.amax(u)+np.amin(u))
@@ -1915,7 +1915,7 @@ def InitTRMM_LBA(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables 
                 PV.values[ijk + w_varshift] = 0.0
                 PV.values[ijk + qt_varshift]  = qt[k]
 
-                if Gr.z_half[k] < 1000.0:
+                if Gr.zp_half[k] < 1000.0:
                     T_pert_ = (T_pert[ijk] - 0.5)* 0.1
                     PV.values[ijk + s_varshift] = Th.entropy(RS.p0_half[k], T[k] + T_pert_, qt[k], 0.0, 0.0)
                 else:
@@ -1957,8 +1957,8 @@ def InitARM_SGP(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables P
         #double [:] u = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
         #double [:] v = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
 
-    Theta = np.interp(Gr.z_half,z_in,Theta_in)
-    qt = np.interp(Gr.z_half,z_in,qt_in)
+    Theta = np.interp(Gr.zp_half,z_in,Theta_in)
+    qt = np.interp(Gr.zp_half,z_in,qt_in)
 
 
       #Set velocities for Galilean transformation
@@ -1988,8 +1988,8 @@ def InitARM_SGP(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables P
                 PV.values[ijk + w_varshift] = 0.0
                 PV.values[ijk + qt_varshift]  = qt[k]
                 T  = Theta[k]*exner_c(RS.p0_half[k])
-                if Gr.z_half[k] < 200.0: # perturbation temp on the lower 200 m and decrease linearly from 0 to 200m
-                    T_pert_ = T_pert[ijk]*(1 - Gr.z_half[k]/200)* 0.1
+                if Gr.zp_half[k] < 200.0: # perturbation temp on the lower 200 m and decrease linearly from 0 to 200m
+                    T_pert_ = T_pert[ijk]*(1 - Gr.zp_half[k]/200)* 0.1
                     PV.values[ijk + s_varshift] = Th.entropy(RS.p0_half[k], T + T_pert_, qt[k], 0.0, 0.0)
                 else:
                     PV.values[ijk + s_varshift] = Th.entropy(RS.p0_half[k], T , qt[k], 0.0, 0.0)
@@ -2030,14 +2030,14 @@ def InitGATE_III(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables 
         double [:] u = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
         #double [:] v = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
 
-    T = np.interp(Gr.z_half,z_T_in,T_in)
+    T = np.interp(Gr.zp_half,z_T_in,T_in)
     T[Gr.dims.gw-1] = T[Gr.dims.gw]
     T[Gr.dims.gw-2] = T[Gr.dims.gw+1]
     T[Gr.dims.gw-3] = T[Gr.dims.gw+2]
     #T[1] = T[Gr.gw+1]
 
-    qt = np.interp(Gr.z_half,z_in,qt_in)
-    u  = np.interp(Gr.z_half,z_in,U_in)
+    qt = np.interp(Gr.zp_half,z_in,qt_in)
+    u  = np.interp(Gr.zp_half,z_in,U_in)
     #Set velocities for Galilean transformation
     RS.u0 = 0.5 * (np.amax(u)+np.amin(u))
     RS.v0 = 0.5 * (np.amax(v)+np.amin(v))
@@ -2065,8 +2065,8 @@ def InitGATE_III(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables 
                 PV.values[ijk + w_varshift] = 0.0
                 PV.values[ijk + qt_varshift]  = qt[k]
 
-                if Gr.z_half[k] < 200.0: # perturbation temp on the lower 200 m and decrease linearly from 0 to 200m
-                    T_pert_ = T_pert[ijk]*(1 - Gr.z_half[k]/200)* 0.1
+                if Gr.zp_half[k] < 200.0: # perturbation temp on the lower 200 m and decrease linearly from 0 to 200m
+                    T_pert_ = T_pert[ijk]*(1 - Gr.zp_half[k]/200)* 0.1
                     PV.values[ijk + s_varshift] = Th.entropy(RS.p0_half[k], T[k]+ T_pert_, qt[k], 0.0, 0.0)#
                 else:
                     PV.values[ijk + s_varshift] = Th.entropy(RS.p0_half[k], T[k] , qt[k], 0.0, 0.0)
