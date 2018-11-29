@@ -17,6 +17,7 @@ cimport TimeStepping
 from NetCDFIO cimport NetCDFIO_Stats
 from Thermodynamics cimport LatentHeat, ClausiusClapeyron
 from libc.math cimport fmax, fmin, fabs
+from thermodynamic_functions cimport cpm_c, pv_c, pd_c
 include 'parameters.pxi'
 
 cdef extern from "microphysics.h":
@@ -104,12 +105,13 @@ cdef class No_Microphysics_SA:
             Py_ssize_t qv_shift = DV.get_varshift(Gr, 'qv')
             Py_ssize_t t_shift = DV.get_varshift(Gr, 'temperature')
             Py_ssize_t qt_shift = PV.get_varshift(Gr, 'qt')
-            Py_ssize_t s_shift  = PV.get_varshift(Gr, 's')
+            Py_ssize_t s_shift
             Py_ssize_t wqt_shift
             double[:] s_src =  np.zeros((Gr.dims.npg,), dtype=np.double, order='c')
             double[:] tmp
 
         if self.cloud_sedimentation:
+            s_shift  = PV.get_varshift(Gr, 's')
             wqt_shift = DV.get_varshift(Gr,'w_qt')
 
             compute_advective_fluxes_a(&Gr.dims, &Ref.rho0[0], &Ref.rho0_half[0], &DV.values[wqt_shift], &DV.values[ql_shift], &dummy[0], 2, self.order)
@@ -289,7 +291,6 @@ cdef class Microphysics_SB_Liquid:
     cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, Th, PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV, TimeStepping.TimeStepping TS, ParallelMPI.ParallelMPI Pa):
         cdef:
 
-
             Py_ssize_t t_shift = DV.get_varshift(Gr, 'temperature')
             Py_ssize_t ql_shift = DV.get_varshift(Gr,'ql')
             Py_ssize_t qv_shift = DV.get_varshift(Gr,'qv')
@@ -331,6 +332,7 @@ cdef class Microphysics_SB_Liquid:
         # DV.communicate_variable(Gr,Pa,wqr_nv )
 
         sb_qt_source_formation(&Gr.dims,  &qr_tend_micro[0], &PV.tendencies[qt_shift])
+
 
 
         cdef:
@@ -504,7 +506,7 @@ cdef cython_wetbulb(Grid.DimStruct *dims, Lookup.LookupStruct *LT, double *p0, d
     cdef:
         double T_1, T_2, T_n, pv_star_1, pv_star_2, qv_star_1, qv_star_2
         double pd_1, pd_2, s_1, s_2, f_1, f_2, delta_T
-    print('In wetbulb')
+
     cdef Py
 
     with nogil:
@@ -549,6 +551,94 @@ cdef cython_wetbulb(Grid.DimStruct *dims, Lookup.LookupStruct *LT, double *p0, d
     return
 
 
+cdef class Microphysics_T_Liquid:
+    def __init__(self, ParallelMPI.ParallelMPI Par, LatentHeat LH, namelist):
+
+        LH.Lambda_fp = lambda_constant
+        LH.L_fp = latent_heat_variable
+        self.thermodynamics_type = 'SA'
+        #also set local versions
+        self.Lambda_fp = lambda_constant
+        self.L_fp = latent_heat_variable
+        self.CC = ClausiusClapeyron()
+        self.CC.initialize(namelist, LH, Par)
+
+        return
+
+
+    cpdef initialize(self, Grid.Grid Gr, PrognosticVariables.PrognosticVariables PV,
+                     DiagnosticVariables.DiagnosticVariables DV, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):
+
+        DV.add_variables('dqtdt_precip', 'kgkg^-1s^-1',
+                         r'\left(\frac{dq_t}{d_t}\right)_{auto}', 'qt autoconversion tendency',  'sym', Pa)
+        DV.add_variables('dsdt_precip', 'J kg^-1 K^-1s^-1',
+                         r'\left(\frac{ds}{d_t}\right)_{auto}', 's autoconversion tendency', 'sym', Pa)
+
+
+        return
+    cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, Th, PrognosticVariables.PrognosticVariables PV,
+                 DiagnosticVariables.DiagnosticVariables DV, TimeStepping.TimeStepping TS, ParallelMPI.ParallelMPI Pa):
+
+        cdef:
+            Py_ssize_t i, j, k, ijk, ishift, jshift
+            Py_ssize_t istride = Gr.dims.nlg[1] * Gr.dims.nlg[2]
+            Py_ssize_t jstride = Gr.dims.nlg[2]
+            Py_ssize_t imin = 0
+            Py_ssize_t jmin = 0
+            Py_ssize_t kmin = 0
+            Py_ssize_t imax = Gr.dims.nlg[0]
+            Py_ssize_t jmax = Gr.dims.nlg[1]
+            Py_ssize_t kmax = Gr.dims.nlg[2]
+            Py_ssize_t count
+            Py_ssize_t s_shift = PV.get_varshift(Gr, 's')
+            Py_ssize_t qt_shift = PV.get_varshift(Gr, 'qt')
+            Py_ssize_t qv_shift = DV.get_varshift(Gr,'qv')
+            Py_ssize_t ql_shift = DV.get_varshift(Gr,'ql')
+            Py_ssize_t t_shift = DV.get_varshift(Gr,'temperature')
+            Py_ssize_t dqtdt_shift = DV.get_varshift(Gr,'dqtdt_precip')
+            Py_ssize_t dsdt_shift = DV.get_varshift(Gr,'dsdt_precip')
+            double lam, t, p0, rho0, qt, qv, pd, pv
+            double lv
+
+        # Ouput profiles of relative humidity
+        with nogil:
+            count = 0
+            for i in range(imin, imax):
+                ishift = i * istride
+                for j in range(jmin, jmax):
+                    jshift = j * jstride
+                    for k in range(kmin, kmax):
+                        ijk = ishift + jshift + k
+
+                        #Zero the diagnotic tendencies
+                        DV.values[dsdt_shift + ijk] = 0.0
+                        DV.values[dqtdt_shift + ijk] = 0.0
+
+                        if DV.values[ql_shift + ijk] > 0.0:
+                            p0 = Ref.p0_half[k]
+                            rho0 = Ref.rho0_half[k]
+                            qt = PV.values[qt_shift + ijk]
+                            qv = qt - DV.values[ql_shift + ijk]
+                            pd = pd_c(p0,qt,qv)
+                            pv = pv_c(p0,qt,qv)
+                            t  = DV.values[t_shift + ijk]
+
+                            lam = self.Lambda_fp(t)
+                            lv = self.L_fp(t, lam)
+
+                            DV.values[dqtdt_shift + ijk] = -fmax(0.0, DV.values[ql_shift + ijk] -  0.02 * DV.values[qv_shift+ijk])/TS.dt
+                            DV.values[dsdt_shift + ijk] = (sv_c(pv,t) - sd_c(pd,t) - lv/t ) * DV.values[dqtdt_shift + ijk]
+                            PV.tendencies[qt_shift + ijk] += DV.values[dqtdt_shift + ijk]
+                            PV.tendencies[s_shift + ijk] += DV.values[dsdt_shift + ijk]
+
+
+
+        return
+    cpdef stats_io(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, Th, PrognosticVariables.PrognosticVariables PV,
+                   DiagnosticVariables.DiagnosticVariables DV, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):
+
+        return
+
 
 
 def MicrophysicsFactory(namelist, LatentHeat LH, ParallelMPI.ParallelMPI Par):
@@ -560,3 +650,5 @@ def MicrophysicsFactory(namelist, LatentHeat LH, ParallelMPI.ParallelMPI Par):
         return Microphysics_SB_Liquid(Par, LH, namelist)
     elif(namelist['microphysics']['scheme'] == 'Arctic_1M'):
         return Microphysics_Arctic_1M(Par, LH, namelist)
+    elif(namelist['microphysics']['scheme'] == 'T_Liquid'):
+        return Microphysics_T_Liquid(Par, LH, namelist)

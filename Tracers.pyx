@@ -23,7 +23,7 @@ include "parameters.pxi"
 import cython
 
 cdef extern from "thermodynamic_functions.h":
-    inline double pv_c(double p0, double qt, double qv) nogil
+    double pv_c(double p0, double qt, double qv) nogil
 
 
 def TracersFactory(namelist):
@@ -73,6 +73,12 @@ cdef class UpdraftTracers:
         except:
             self.lcl_tracers = False
 
+        try:
+            self.timescale = namelist['tracers']['timescale']
+        except:
+            self.timescale = 15.0
+            print 'defaulting to 15min tracer decay timescale'
+
         self.index_lcl = 0
 
         return
@@ -87,14 +93,14 @@ cdef class UpdraftTracers:
         self.tracer_dict = {}
         self.tracer_dict['surface'] = {}
         self.tracer_dict['surface']['c_srf_15'] = {}
-        self.tracer_dict['surface']['c_srf_15']['timescale'] = 15.0 * 60.0
+        self.tracer_dict['surface']['c_srf_15']['timescale'] = self.timescale * 60.0
         if self.lcl_tracers:
             self.tracer_dict['lcl'] = {}
             self.tracer_dict['lcl']['c_lcl_15'] = {}
-            self.tracer_dict['lcl']['c_lcl_15']['timescale'] = 15.0 * 60.0
+            self.tracer_dict['lcl']['c_lcl_15']['timescale'] = self.timescale * 60.0
 
         for var in self.tracer_dict['surface'].keys():
-           PV.add_variable(var, '-', var, 'tracer diagnostics' , "sym", "scalar", Pa)
+            PV.add_variable(var, '-', var, 'tracer diagnostics' , "sym", "scalar", Pa)
 
         if self.lcl_tracers:
             for var in self.tracer_dict['lcl'].keys():
@@ -215,7 +221,7 @@ cdef class UpdraftTracers:
                        desc=r'environment liquid water specific humidity')
             NS.add_profile('env_ql2', Gr, Pa, units=r'kg^2 kg^{-2}',nice_name=r'q_{l,u}^2',
                        desc=r'environment total water specific humidity square')
-        if 'qr' in PV.name_index:
+        if 'qr' in PV.name_index or 'qrain' in PV.name_index:
             NS.add_profile('updraft_qr', Gr, Pa, units=r'kg kg^{-1}',nice_name=r'q_{r,u}',
                        desc=r'updraft rain water specific humidity')
             NS.add_profile('updraft_qr2', Gr, Pa, units=r'kg^2 kg^{-2}',nice_name=r'q_{r,u}^2',
@@ -646,18 +652,17 @@ cdef class PurityTracers:
         self.TracersUpdraft.initialize(Gr, PV, DV, NS, Pa)
         # Here we need to add purity + origin info tracers for each of the updraft diagnostic tracers
         # To get this working, we assume only 15 min timescale diagnostic tracers
-
         PV.add_variable('purity_srf', '-', 'purity_srf', 'tracer diagnostics', "sym", "scalar", Pa)
-        PV.add_variable('time_srf', '-', 'time_srf', 'tracer diagnostics', "sym", "scalar", Pa)
-        PV.add_variable('qt_srf', '-', 'qt_srf', 'tracer diagnostics', "sym", "scalar", Pa)
-        PV.add_variable('thetali_srf', '-', 'thetali_srf', 'tracer diagnostics', "sym", "scalar", Pa)
+        PV.add_variable('time_srf', 's', 'time_srf', 'tracer diagnostics', "sym", "scalar", Pa)
+        PV.add_variable('qt_srf', 'kg/kg', 'qt_srf', 'scalar', "sym", "scalar", Pa)
+        PV.add_variable('thetali_srf', 'K', 'thetali_srf', 'scalar', "sym", "scalar", Pa)
 
         if self.TracersUpdraft.lcl_tracers:
 
-            PV.add_variable('purity_lcl', '-', 'purity_lcl', 'tracer diagnostics', "sym", "scalar", Pa)
-            PV.add_variable('time_lcl', '-', 'time_lcl', 'tracer diagnostics', "sym", "scalar", Pa)
-            PV.add_variable('qt_lcl', '-', 'qt_lcl', 'tracer diagnostics', "sym", "scalar", Pa)
-            PV.add_variable('thetali_lcl', '-', 'thetali_lcl', 'tracer diagnostics', "sym", "scalar", Pa)
+            PV.add_variable('purity_lcl', '-', 'purity_lcl', 'scalar', "sym", "scalar", Pa)
+            PV.add_variable('time_lcl', 's', 'time_lcl', 'tracer diagnostics', "sym", "scalar", Pa)
+            PV.add_variable('qt_lcl', 'kg/kg', 'qt_lcl', 'scalar', "sym", "scalar", Pa)
+            PV.add_variable('thetali_lcl', 'K', 'thetali_lcl', 'scalar', "sym", "scalar", Pa)
 
         NS.add_profile('updraft_purity_srf', Gr, Pa)
         NS.add_profile('updraft_time_srf', Gr, Pa)
@@ -1001,6 +1006,8 @@ cdef updraft_indicator_sc_w_ql(Grid.DimStruct *dims,  double *tracer_raw, double
                             if ql[ijk] < ql_threshold:
                                 tracer_normed[ijk] = 0.0
     return
+
+
 
 
 cdef purity_extract_time(Grid.DimStruct *dims,  double *purity_tracer, double *time_tracer_raw, double *time_tracer,

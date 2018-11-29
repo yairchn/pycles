@@ -14,6 +14,7 @@ cdef class SurfaceBase:
         double T_surface
         double [:] s_flux
         double [:] qt_flux
+        double [:] thli_flux
         double [:] u_flux
         double [:] v_flux
         double [:] friction_velocity
@@ -22,6 +23,7 @@ cdef class SurfaceBase:
         double [:] lhf
         double [:] b_flux
         bint dry_case
+        bint s_prognostic
         double (*L_fp)(double T, double Lambda) nogil
         double (*Lambda_fp)(double T) nogil
 
@@ -56,6 +58,22 @@ cdef class SurfaceSullivanPatton(SurfaceBase):
 
 
 cdef class SurfaceBomex(SurfaceBase):
+    cdef:
+        double theta_flux
+        double ustar_
+        double theta_surface
+        double qt_surface
+        double buoyancy_flux
+        double gustiness
+
+
+    cpdef initialize(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa)
+    cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, PrognosticVariables.PrognosticVariables PV,DiagnosticVariables.DiagnosticVariables DV,
+                 ParallelMPI.ParallelMPI Pa, TimeStepping.TimeStepping TS)
+    cpdef stats_io(self, Grid.Grid Gr, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa)
+
+
+cdef class SurfaceLifecycle_Tan2018(SurfaceBase):
     cdef:
         double theta_flux
         double ustar_
@@ -210,6 +228,69 @@ cdef class SurfaceZGILS(SurfaceBase):
     cpdef initialize(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa)
     cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, PrognosticVariables.PrognosticVariables PV,
                  DiagnosticVariables.DiagnosticVariables DV,   ParallelMPI.ParallelMPI Pa, TimeStepping.TimeStepping TS)
+    cpdef stats_io(self, Grid.Grid Gr, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa)
+
+
+cdef class SurfaceTRMM_LBA(SurfaceBase):
+    cdef:
+        double lv
+        double ft
+        double fq
+        double cm
+        double buoyancy_flux
+        double gustiness
+        double [:] windspeed
+        double [:] A
+
+    cpdef initialize(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa)
+    cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, PrognosticVariables.PrognosticVariables PV,
+                 DiagnosticVariables.DiagnosticVariables DV,
+                 ParallelMPI.ParallelMPI Pa, TimeStepping.TimeStepping TS)
+    cpdef stats_io(self, Grid.Grid Gr, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa)
+
+cdef class SurfaceARM_SGP(SurfaceBase):
+    cdef:
+        double lv
+        double ft
+        double fq
+        double cm
+
+        double buoyancy_flux
+        double gustiness
+        double [:] windspeed
+        double [:] A
+
+
+
+
+    cpdef initialize(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa)
+    cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, PrognosticVariables.PrognosticVariables PV,
+                 DiagnosticVariables.DiagnosticVariables DV,
+                 ParallelMPI.ParallelMPI Pa, TimeStepping.TimeStepping TS)
+    cpdef stats_io(self, Grid.Grid Gr, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa)
+
+cdef class SurfaceGATE_III(SurfaceBase):
+    cdef:
+        ClausiusClapeyron CC
+        double s_star
+        double qv_star
+        double Ri
+        double Nb2
+        double theta_rho_g
+        double cm
+        double z0
+        double qt_surface
+        double p_surface
+        #double qt_flux
+        #double T_surface
+        #double qt_surface
+        double gustiness
+        double [:] windspeed
+
+    cpdef initialize(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa)
+    cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, PrognosticVariables.PrognosticVariables PV,
+                 DiagnosticVariables.DiagnosticVariables DV,
+                 ParallelMPI.ParallelMPI Pa, TimeStepping.TimeStepping TS)
     cpdef stats_io(self, Grid.Grid Gr, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa)
 
 

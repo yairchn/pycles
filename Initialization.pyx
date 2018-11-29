@@ -20,9 +20,6 @@ from Forcing cimport AdjustedMoistAdiabat
 from Thermodynamics cimport LatentHeat
 from libc.math cimport sqrt, fmin, cos, exp, fabs
 include 'parameters.pxi'
-# import matplotlib.pyplot as plt
-
-
 
 def InitializationFactory(namelist):
 
@@ -33,7 +30,7 @@ def InitializationFactory(namelist):
             return InitStableBubble
         elif casename == 'SaturatedBubble':
             return InitSaturatedBubble
-        elif casename == 'Bomex':
+        elif casename == 'Bomex' or casename == 'lifecycle_Tan2018':
             return InitBomex
         elif casename == 'Gabls':
             return InitGabls
@@ -57,7 +54,12 @@ def InitializationFactory(namelist):
             return  InitCGILS
         elif casename == 'ZGILS':
             return  InitZGILS
-
+        elif casename == 'TRMM_LBA':
+            return  InitTRMM_LBA
+        elif casename == 'ARM_SGP':
+            return  InitARM_SGP
+        elif casename == 'GATE_III':
+            return InitGATE_III
         else:
             pass
 
@@ -79,28 +81,81 @@ def InitStableBubble(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariab
         Py_ssize_t u_varshift = PV.get_varshift(Gr,'u')
         Py_ssize_t v_varshift = PV.get_varshift(Gr,'v')
         Py_ssize_t w_varshift = PV.get_varshift(Gr,'w')
-        Py_ssize_t s_varshift = PV.get_varshift(Gr,'s')
+        Py_ssize_t s_varshift
+        Py_ssize_t thli_varshit
         Py_ssize_t i,j,k
         Py_ssize_t ishift, jshift
         Py_ssize_t ijk
         double t
         double dist
 
-    t_min = 9999.9
-    for i in xrange(Gr.dims.nlg[0]):
-        ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
-        for j in xrange(Gr.dims.nlg[1]):
-            jshift = j * Gr.dims.nlg[2]
-            for k in xrange(Gr.dims.nlg[2]):
-                ijk = ishift + jshift + k
-                PV.values[u_varshift + ijk] = 0.0
-                PV.values[v_varshift + ijk] = 0.0
-                PV.values[w_varshift + ijk] = 0.0
-                dist  = np.sqrt(((Gr.x_half[i + Gr.dims.indx_lo[0]]/1000.0 - 25.6)/4.0)**2.0 + ((Gr.z_half[k + Gr.dims.indx_lo[2]]/1000.0 - 3.0)/2.0)**2.0)
-                dist = fmin(dist,1.0)
-                t = (300.0 )*exner_c(RS.p0_half[k]) - 15.0*( cos(np.pi * dist) + 1.0) /2.0
-                PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k],t,0.0,0.0,0.0)
+    try:
+        s_prognostic = namelist['thermodynamics']['s_prognostic']
+    except:
+        s_prognostic = True
 
+    if s_prognostic:
+        s_varshift = PV.get_varshift(Gr,'s')
+    else:
+        thli_varshift = PV.get_varshift(Gr, 'thli')
+
+    if s_prognostic:
+        for i in xrange(Gr.dims.nlg[0]):
+            ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
+            for j in xrange(Gr.dims.nlg[1]):
+                jshift = j * Gr.dims.nlg[2]
+                for k in xrange(Gr.dims.nlg[2]):
+                    ijk = ishift + jshift + k
+                    PV.values[u_varshift + ijk] = 0.0
+                    PV.values[v_varshift + ijk] = 0.0
+                    PV.values[w_varshift + ijk] = 0.0
+                    dist  = np.sqrt(((Gr.x_half[i + Gr.dims.indx_lo[0]]/1000.0 - 25.6)/4.0)**2.0 + ((Gr.zp_half[k + Gr.dims.indx_lo[2]]/1000.0 - 3.0)/2.0)**2.0)
+                    dist = fmin(dist,1.0)
+                    t = (300.0 )*exner_c(RS.p0_half[k]) - 15.0*( cos(np.pi * dist) + 1.0) /2.0
+                    PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k],t,0.0,0.0,0.0)
+    else:
+        for i in xrange(Gr.dims.nlg[0]):
+            ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
+            for j in xrange(Gr.dims.nlg[1]):
+                jshift = j * Gr.dims.nlg[2]
+                for k in xrange(Gr.dims.nlg[2]):
+                    ijk = ishift + jshift + k
+                    PV.values[u_varshift + ijk] = 0.0
+                    PV.values[v_varshift + ijk] = 0.0
+                    PV.values[w_varshift + ijk] = 0.0
+                    dist  = np.sqrt(((Gr.x_half[i + Gr.dims.indx_lo[0]]/1000.0 - 25.6)/4.0)**2.0 + ((Gr.zp_half[k + Gr.dims.indx_lo[2]]/1000.0 - 3.0)/2.0)**2.0)
+                    dist = fmin(dist,1.0)
+                    t = (300.0 )*exner_c(RS.p0_half[k]) - 15.0*( cos(np.pi * dist) + 1.0) /2.0
+                    PV.values[thli_varshift + ijk] = thetali_c(RS.p0_half[k], t, 0.0, 0.0, 0.0, Th.get_lh(t))
+
+    if s_prognostic:
+        for i in xrange(Gr.dims.nlg[0]):
+            ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
+            for j in xrange(Gr.dims.nlg[1]):
+                jshift = j * Gr.dims.nlg[2]
+                for k in xrange(Gr.dims.nlg[2]):
+                    ijk = ishift + jshift + k
+                    PV.values[u_varshift + ijk] = 0.0
+                    PV.values[v_varshift + ijk] = 0.0
+                    PV.values[w_varshift + ijk] = 0.0
+                    dist  = np.sqrt(((Gr.x_half[i + Gr.dims.indx_lo[0]]/1000.0 - 25.6)/4.0)**2.0 + ((Gr.z_half[k + Gr.dims.indx_lo[2]]/1000.0 - 3.0)/2.0)**2.0)
+                    dist = fmin(dist,1.0)
+                    t = (300.0 )*exner_c(RS.p0_half[k]) - 15.0*( cos(np.pi * dist) + 1.0) /2.0
+                    PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k],t,0.0,0.0,0.0)
+    else:
+        for i in xrange(Gr.dims.nlg[0]):
+            ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
+            for j in xrange(Gr.dims.nlg[1]):
+                jshift = j * Gr.dims.nlg[2]
+                for k in xrange(Gr.dims.nlg[2]):
+                    ijk = ishift + jshift + k
+                    PV.values[u_varshift + ijk] = 0.0
+                    PV.values[v_varshift + ijk] = 0.0
+                    PV.values[w_varshift + ijk] = 0.0
+                    dist  = np.sqrt(((Gr.x_half[i + Gr.dims.indx_lo[0]]/1000.0 - 25.6)/4.0)**2.0 + ((Gr.z_half[k + Gr.dims.indx_lo[2]]/1000.0 - 3.0)/2.0)**2.0)
+                    dist = fmin(dist,1.0)
+                    t = (300.0 )*exner_c(RS.p0_half[k]) - 15.0*( cos(np.pi * dist) + 1.0) /2.0
+                    PV.values[thli_varshift + ijk] = thetali_c(RS.p0_half[k], t, 0.0, 0.0, 0.0, Th.get_lh(t))
 
     return
 
@@ -152,8 +207,10 @@ def InitSaturatedBubble(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVari
 
             delta = np.abs(T1 - T2)
          return T2, ql2
-
-    RS.Tg, ql = theta_to_T(RS.Pg,thetas_sfc,qt_sfc)
+    if 's' in PV.name_index:
+        RS.Tg, ql = theta_to_T(RS.Pg,thetas_sfc,qt_sfc)
+    else:
+        RS.Tg = 307.616824335
     RS.initialize(Gr, Th, NS, Pa)
 
     #Get the variable number for each of the velocity components
@@ -161,7 +218,8 @@ def InitSaturatedBubble(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVari
         Py_ssize_t u_varshift = PV.get_varshift(Gr,'u')
         Py_ssize_t v_varshift = PV.get_varshift(Gr,'v')
         Py_ssize_t w_varshift = PV.get_varshift(Gr,'w')
-        Py_ssize_t s_varshift = PV.get_varshift(Gr,'s')
+        Py_ssize_t s_varshift
+        Py_ssize_t thli_varshit
         Py_ssize_t qt_varshift = PV.get_varshift(Gr,'qt')
         Py_ssize_t i,j,k
         Py_ssize_t ishift, jshift
@@ -170,21 +228,41 @@ def InitSaturatedBubble(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVari
         double dist
         double thetas
 
-    for i in xrange(Gr.dims.nlg[0]):
-        ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
-        for j in xrange(Gr.dims.nlg[1]):
-            jshift = j * Gr.dims.nlg[2]
-            for k in xrange(Gr.dims.nlg[2]):
-                ijk = ishift + jshift + k
-                dist = np.sqrt(((Gr.x_half[i + Gr.dims.indx_lo[0]]/1000.0 - 10.0)/2.0)**2.0 + ((Gr.z_half[k + Gr.dims.indx_lo[2]]/1000.0 - 2.0)/2.0)**2.0)
-                dist = np.minimum(1.0,dist)
-                thetas = RS.Tg
-                thetas += 2.0 * np.cos(np.pi * dist / 2.0)**2.0
-                PV.values[s_varshift + ijk] = entropy_from_thetas_c(thetas,RS.qtg)
-                PV.values[u_varshift + ijk] = 0.0 - RS.u0
-                PV.values[v_varshift + ijk] = 0.0 - RS.v0
-                PV.values[w_varshift + ijk] = 0.0
-                PV.values[qt_varshift + ijk] = RS.qtg
+
+    if 's' in PV.name_index:
+        s_varshift = PV.get_varshift(Gr,'s')
+        for i in xrange(Gr.dims.nlg[0]):
+            ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
+            for j in xrange(Gr.dims.nlg[1]):
+                jshift = j * Gr.dims.nlg[2]
+                for k in xrange(Gr.dims.nlg[2]):
+                    ijk = ishift + jshift + k
+                    dist = np.sqrt(((Gr.x_half[i + Gr.dims.indx_lo[0]]/1000.0 - 10.0)/2.0)**2.0 + ((Gr.zp_half[k + Gr.dims.indx_lo[2]]/1000.0 - 2.0)/2.0)**2.0)
+                    dist = np.minimum(1.0,dist)
+                    thetas = RS.Tg
+                    thetas += 2.0 * np.cos(np.pi * dist / 2.0)**2.0
+                    PV.values[s_varshift + ijk] = entropy_from_thetas_c(thetas,RS.qtg)
+                    PV.values[u_varshift + ijk] = 0.0 - RS.u0
+                    PV.values[v_varshift + ijk] = 0.0 - RS.v0
+                    PV.values[w_varshift + ijk] = 0.0
+                    PV.values[qt_varshift + ijk] = RS.qtg
+    else:
+        thli_varshift = PV.get_varshift(Gr,'thli')
+        for i in xrange(Gr.dims.nlg[0]):
+            ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
+            for j in xrange(Gr.dims.nlg[1]):
+                jshift = j * Gr.dims.nlg[2]
+                for k in xrange(Gr.dims.nlg[2]):
+                    ijk = ishift + jshift + k
+                    dist = np.sqrt(((Gr.x_half[i + Gr.dims.indx_lo[0]]/1000.0 - 10.0)/2.0)**2.0 + ((Gr.zp_half[k + Gr.dims.indx_lo[2]]/1000.0 - 2.0)/2.0)**2.0)
+                    dist = np.minimum(1.0,dist)
+                    thetas = RS.Tg
+                    thetas += 2.0 * np.cos(np.pi * dist / 2.0)**2.0
+                    PV.values[thli_varshift + ijk] = thetas
+                    PV.values[u_varshift + ijk] = 0.0 - RS.u0
+                    PV.values[v_varshift + ijk] = 0.0 - RS.v0
+                    PV.values[w_varshift + ijk] = 0.0
+                    PV.values[qt_varshift + ijk] = RS.qtg
 
     return
 
@@ -218,12 +296,12 @@ def InitSullivanPatton(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVaria
         cdef double theta_pert_
 
     for k in xrange(Gr.dims.nlg[2]):
-        if Gr.zl_half[k] <=  974.0:
+        if Gr.zp_half[k] <=  974.0:
             theta[k] = 300.0
-        elif Gr.zl_half[k] <= 1074.0:
-            theta[k] = 300.0 + (Gr.zl_half[k] - 974.0) * 0.08
+        elif Gr.zp_half[k] <= 1074.0:
+            theta[k] = 300.0 + (Gr.zp_half[k] - 974.0) * 0.08
         else:
-            theta[k] = 308.0 + (Gr.zl_half[k] - 1074.0) * 0.003
+            theta[k] = 308.0 + (Gr.zp_half[k] - 1074.0) * 0.003
 
     cdef double [:] p0 = RS.p0_half
 
@@ -239,7 +317,7 @@ def InitSullivanPatton(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVaria
                 PV.values[w_varshift + ijk] = 0.0
 
                 #Now set the entropy prognostic variable including a potential temperature perturbation
-                if Gr.zl_half[k] < 200.0:
+                if Gr.zp_half[k] < 200.0:
                     theta_pert_ = (theta_pert[ijk] - 0.5)* 0.1
                 else:
                     theta_pert_ = 0.0
@@ -280,7 +358,8 @@ def InitBomex(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
         Py_ssize_t u_varshift = PV.get_varshift(Gr,'u')
         Py_ssize_t v_varshift = PV.get_varshift(Gr,'v')
         Py_ssize_t w_varshift = PV.get_varshift(Gr,'w')
-        Py_ssize_t s_varshift = PV.get_varshift(Gr,'s')
+        Py_ssize_t s_varshift
+        Py_ssize_t thli_varshift
         Py_ssize_t qt_varshift = PV.get_varshift(Gr,'qt')
         Py_ssize_t i,j,k
         Py_ssize_t ishift, jshift
@@ -298,61 +377,80 @@ def InitBomex(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
     for k in xrange(Gr.dims.nlg[2]):
 
         #Set Thetal profile
-        if Gr.zl_half[k] <= 520.:
+        if Gr.zp_half[k] <= 520.:
             thetal[k] = 298.7
-        if Gr.zl_half[k] > 520.0 and Gr.zl_half[k] <= 1480.0:
-            thetal[k] = 298.7 + (Gr.zl_half[k] - 520)  * (302.4 - 298.7)/(1480.0 - 520.0)
-        if Gr.zl_half[k] > 1480.0 and Gr.zl_half[k] <= 2000:
-            thetal[k] = 302.4 + (Gr.zl_half[k] - 1480.0) * (308.2 - 302.4)/(2000.0 - 1480.0)
-        if Gr.zl_half[k] > 2000.0:
-            thetal[k] = 308.2 + (Gr.zl_half[k] - 2000.0) * (311.85 - 308.2)/(3000.0 - 2000.0)
+        if Gr.zp_half[k] > 520.0 and Gr.zp_half[k] <= 1480.0:
+            thetal[k] = 298.7 + (Gr.zp_half[k] - 520)  * (302.4 - 298.7)/(1480.0 - 520.0)
+        if Gr.zp_half[k] > 1480.0 and Gr.zp_half[k] <= 2000:
+            thetal[k] = 302.4 + (Gr.zp_half[k] - 1480.0) * (308.2 - 302.4)/(2000.0 - 1480.0)
+        if Gr.zp_half[k] > 2000.0:
+            thetal[k] = 308.2 + (Gr.zp_half[k] - 2000.0) * (311.85 - 308.2)/(3000.0 - 2000.0)
 
         #Set qt profile
-        if Gr.zl_half[k] <= 520:
-            qt[k] = 17.0 + (Gr.zl_half[k]) * (16.3-17.0)/520.0
-        if Gr.zl_half[k] > 520.0 and Gr.zl_half[k] <= 1480.0:
-            qt[k] = 16.3 + (Gr.zl_half[k] - 520.0)*(10.7 - 16.3)/(1480.0 - 520.0)
-        if Gr.zl_half[k] > 1480.0 and Gr.zl_half[k] <= 2000.0:
-            qt[k] = 10.7 + (Gr.zl_half[k] - 1480.0) * (4.2 - 10.7)/(2000.0 - 1480.0)
-        if Gr.zl_half[k] > 2000.0:
-            qt[k] = 4.2 + (Gr.zl_half[k] - 2000.0) * (3.0 - 4.2)/(3000.0  - 2000.0)
+        if Gr.zp_half[k] <= 520:
+            qt[k] = 17.0 + (Gr.zp_half[k]) * (16.3-17.0)/520.0
+        if Gr.zp_half[k] > 520.0 and Gr.zp_half[k] <= 1480.0:
+            qt[k] = 16.3 + (Gr.zp_half[k] - 520.0)*(10.7 - 16.3)/(1480.0 - 520.0)
+        if Gr.zp_half[k] > 1480.0 and Gr.zp_half[k] <= 2000.0:
+            qt[k] = 10.7 + (Gr.zp_half[k] - 1480.0) * (4.2 - 10.7)/(2000.0 - 1480.0)
+        if Gr.zp_half[k] > 2000.0:
+            qt[k] = 4.2 + (Gr.zp_half[k] - 2000.0) * (3.0 - 4.2)/(3000.0  - 2000.0)
 
         #Change units to kg/kg
         qt[k]/= 1000.0
 
         #Set u profile
-        if Gr.zl_half[k] <= 700.0:
+        if Gr.zp_half[k] <= 700.0:
             u[k] = -8.75
-        if Gr.zl_half[k] > 700.0:
-            u[k] = -8.75 + (Gr.zl_half[k] - 700.0) * (-4.61 - -8.75)/(3000.0 - 700.0)
+        if Gr.zp_half[k] > 700.0:
+            u[k] = -8.75 + (Gr.zp_half[k] - 700.0) * (-4.61 - -8.75)/(3000.0 - 700.0)
 
     #Set velocities for Galilean transformation
     RS.v0 = 0.0
     RS.u0 = 0.5 * (np.amax(u)+np.amin(u))
 
-
-
     #Now loop and set the initial condition
     #First set the velocities
     count = 0
-    for i in xrange(Gr.dims.nlg[0]):
-        ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
-        for j in xrange(Gr.dims.nlg[1]):
-            jshift = j * Gr.dims.nlg[2]
-            for k in xrange(Gr.dims.nlg[2]):
-                ijk = ishift + jshift + k
-                PV.values[u_varshift + ijk] = u[k] - RS.u0
-                PV.values[v_varshift + ijk] = 0.0 - RS.v0
-                PV.values[w_varshift + ijk] = 0.0
-                if Gr.zl_half[k] <= 1600.0:
-                    temp = (thetal[k] + (theta_pert[count])) * exner_c(RS.p0_half[k])
-                    qt_ = qt[k]+qt_pert[count]
-                else:
-                    temp = (thetal[k]) * exner_c(RS.p0_half[k])
-                    qt_ = qt[k]
-                PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k],temp,qt_,0.0,0.0)
-                PV.values[qt_varshift + ijk] = qt_
-                count += 1
+
+    if 's' in PV.name_index:
+        s_varshift = PV.get_varshift(Gr,'s')
+        for i in xrange(Gr.dims.nlg[0]):
+            ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
+            for j in xrange(Gr.dims.nlg[1]):
+                jshift = j * Gr.dims.nlg[2]
+                for k in xrange(Gr.dims.nlg[2]):
+                    ijk = ishift + jshift + k
+                    PV.values[u_varshift + ijk] = u[k] - RS.u0
+                    PV.values[v_varshift + ijk] = 0.0 - RS.v0
+                    PV.values[w_varshift + ijk] = 0.0
+                    if Gr.zp_half[k] <= 1600.0:
+                        temp = (thetal[k] + (theta_pert[count])) * exner_c(RS.p0_half[k])
+                        qt_ = qt[k] + qt_pert[count]
+                    else:
+                        temp = (thetal[k]) * exner_c(RS.p0_half[k])
+                        qt_ = qt[k]
+                    PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k],temp,qt_,0.0,0.0)
+                    PV.values[qt_varshift + ijk] = qt_
+                    count += 1
+    else:
+        thli_varshift = PV.get_varshift(Gr,'thli')
+        for i in xrange(Gr.dims.nlg[0]):
+            ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
+            for j in xrange(Gr.dims.nlg[1]):
+                jshift = j * Gr.dims.nlg[2]
+                for k in xrange(Gr.dims.nlg[2]):
+                    ijk = ishift + jshift + k
+                    PV.values[u_varshift + ijk] = u[k] - RS.u0
+                    PV.values[v_varshift + ijk] = 0.0 - RS.v0
+                    PV.values[w_varshift + ijk] = 0.0
+                    if Gr.zp_half[k] <= 1600.0:
+                        PV.values[thli_varshift + ijk] = (thetal[k] + (theta_pert[count]))
+                        PV.values[qt_varshift + ijk] = qt[k] + qt_pert[count]
+                    else:
+                        PV.values[thli_varshift + ijk] = thetal[k]
+                        PV.values[qt_varshift + ijk] = qt[k]
+                    count += 1
 
     if 'e' in PV.name_index:
         e_varshift = PV.get_varshift(Gr, 'e')
@@ -362,8 +460,7 @@ def InitBomex(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
                 jshift = j * Gr.dims.nlg[2]
                 for k in xrange(Gr.dims.nlg[2]):
                     ijk = ishift + jshift + k
-                    PV.values[e_varshift + ijk] = 1.0-Gr.zl_half[k]/3000.0
-
+                    PV.values[e_varshift + ijk] = 1.0-Gr.zp_half[k]/3000.0
 
     return
 
@@ -398,11 +495,11 @@ def InitGabls(namelist,Grid.Grid Gr, PrognosticVariables.PrognosticVariables PV,
         cdef double theta_pert_
 
     for k in xrange(Gr.dims.nlg[2]):
-        if Gr.zl_half[k] <=  100.0:
+        if Gr.zp_half[k] <=  100.0:
             theta[k] = 265.0
 
         else:
-            theta[k] = 265.0 + (Gr.zl_half[k] - 100.0) * 0.01
+            theta[k] = 265.0 + (Gr.zp_half[k] - 100.0) * 0.01
 
     cdef double [:] p0 = RS.p0_half
 
@@ -419,7 +516,7 @@ def InitGabls(namelist,Grid.Grid Gr, PrognosticVariables.PrognosticVariables PV,
                 PV.values[w_varshift + ijk] = 0.0
 
                 #Now set the entropy prognostic variable including a potential temperature perturbation
-                if Gr.zl_half[k] < 50.0:
+                if Gr.zp_half[k] < 50.0:
                     theta_pert_ = (theta_pert[ijk] - 0.5)* 0.1
                 else:
                     theta_pert_ = 0.0
@@ -436,8 +533,8 @@ def InitGabls(namelist,Grid.Grid Gr, PrognosticVariables.PrognosticVariables PV,
                 jshift = j * Gr.dims.nlg[2]
                 for k in xrange(Gr.dims.nlg[2]):
                     ijk = ishift + jshift + k
-                    if Gr.zl_half[k] <= 250.0:
-                        PV.values[e_varshift + ijk] = 0.4*(1.0-Gr.zl_half[k]/250.0)**3.0
+                    if Gr.zp_half[k] <= 250.0:
+                        PV.values[e_varshift + ijk] = 0.4*(1.0-Gr.zp_half[k]/250.0)**3.0
                     else:
                         PV.values[e_varshift + ijk] = 0.0
 
@@ -483,18 +580,19 @@ def InitDYCOMS_RF01(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariable
         Py_ssize_t u_varshift = PV.get_varshift(Gr,'u')
         Py_ssize_t v_varshift = PV.get_varshift(Gr,'v')
         Py_ssize_t w_varshift = PV.get_varshift(Gr,'w')
-        Py_ssize_t s_varshift = PV.get_varshift(Gr,'s')
+        Py_ssize_t s_varshift
+        Py_ssize_t thli_varshift
         Py_ssize_t qt_varshift = PV.get_varshift(Gr,'qt')
         double [:] thetal = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
         double [:] qt = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
         Py_ssize_t e_varshift
 
     for k in xrange(Gr.dims.nlg[2]):
-        if Gr.zl_half[k] <=840.0:
+        if Gr.zp_half[k] <=840.0:
             thetal[k] = 289.0
             qt[k] = 9.0/1000.0
-        if Gr.zl_half[k] > 840.0:
-            thetal[k] = 297.5 + (Gr.zl_half[k] - 840.0)**(1.0/3.0)
+        if Gr.zp_half[k] > 840.0:
+            thetal[k] = 297.5 + (Gr.zp_half[k] - 840.0)**(1.0/3.0)
             qt[k] = 1.5/1000.0
 
     def compute_thetal(p_,T_,ql_):
@@ -545,25 +643,44 @@ def InitDYCOMS_RF01(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariable
     cdef double [:] theta_pert = np.random.random_sample(Gr.dims.npg)
     cdef double theta_pert_
 
-    for i in xrange(Gr.dims.nlg[0]):
-        ishift = istride * i
-        for j in xrange(Gr.dims.nlg[1]):
-            jshift = jstride * j
-            for k in xrange(Gr.dims.nlg[2]):
-                ijk = ishift + jshift + k
-                PV.values[ijk + u_varshift] = 0.0
-                PV.values[ijk + v_varshift] = 0.0
-                PV.values[ijk + w_varshift] = 0.0
-                PV.values[ijk + qt_varshift]  = qt[k]
+    if 's' in PV.name_index:
+        s_varshift = PV.get_varshift(Gr, 's')
+        for i in xrange(Gr.dims.nlg[0]):
+            ishift = istride * i
+            for j in xrange(Gr.dims.nlg[1]):
+                jshift = jstride * j
+                for k in xrange(Gr.dims.nlg[2]):
+                    ijk = ishift + jshift + k
+                    PV.values[ijk + u_varshift] = 0.0
+                    PV.values[ijk + v_varshift] = 0.0
+                    PV.values[ijk + w_varshift] = 0.0
+                    PV.values[ijk + qt_varshift]  = qt[k]
 
-                #Now set the entropy prognostic variable including a potential temperature perturbation
-                if Gr.zl_half[k] < 200.0:
-                    theta_pert_ = (theta_pert[ijk] - 0.5)* 0.1
-                else:
-                    theta_pert_ = 0.0
-                T,ql = sat_adjst(RS.p0_half[k],thetal[k] + theta_pert_,qt[k])
-                PV.values[ijk + s_varshift] = Th.entropy(RS.p0_half[k], T, qt[k], ql, 0.0)
+                    #Now set the entropy prognostic variable including a potential temperature perturbation
+                    if Gr.zp_half[k] < 200.0:
+                        theta_pert_ = (theta_pert[ijk] - 0.5)* 0.1
+                    else:
+                        theta_pert_ = 0.0
+                    T,ql = sat_adjst(RS.p0_half[k],thetal[k] + theta_pert_,qt[k])
+                    PV.values[ijk + s_varshift] = Th.entropy(RS.p0_half[k], T, qt[k], ql, 0.0)
+    else:
+        thli_varshift = PV.get_varshift(Gr, 'thli')
+        for i in xrange(Gr.dims.nlg[0]):
+            ishift = istride * i
+            for j in xrange(Gr.dims.nlg[1]):
+                jshift = jstride * j
+                for k in xrange(Gr.dims.nlg[2]):
+                    ijk = ishift + jshift + k
+                    PV.values[ijk + u_varshift] = 0.0
+                    PV.values[ijk + v_varshift] = 0.0
+                    PV.values[ijk + w_varshift] = 0.0
+                    PV.values[ijk + qt_varshift]  = qt[k]
 
+                    if Gr.zp_half[k] < 200.0:
+                        theta_pert_ = (theta_pert[ijk] - 0.5)* 0.1
+                    else:
+                        theta_pert_ = 0.0
+                    PV.values[ijk + thli_varshift] = thetal[k] + theta_pert_
 
     if 'e' in PV.name_index:
         e_varshift = PV.get_varshift(Gr, 'e')
@@ -573,7 +690,7 @@ def InitDYCOMS_RF01(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariable
                 jshift = j * Gr.dims.nlg[2]
                 for k in xrange(Gr.dims.nlg[2]):
                     ijk = ishift + jshift + k
-                    if Gr.zl_half[k] < 200.0:
+                    if Gr.zp_half[k] < 200.0:
                         PV.values[e_varshift + ijk] = 0.0
 
     return
@@ -616,14 +733,14 @@ def InitDYCOMS_RF02(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariable
         double [:] v = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
 
     for k in xrange(Gr.dims.nlg[2]):
-        if Gr.zl_half[k] <=795.0:
+        if Gr.zp_half[k] <=795.0:
             thetal[k] = 288.3
             qt[k] = 9.45/1000.0
-        if Gr.zl_half[k] > 795.0:
-            thetal[k] = 295.0 + (Gr.zl_half[k] - 795.0)**(1.0/3.0)
-            qt[k] = (5.0 - 3.0 * (1.0 - np.exp(-(Gr.zl_half[k] - 795.0)/500.0)))/1000.0
-        v[k] = -9.0 + 5.6 * Gr.zl_half[k]/1000.0 - RS.v0
-        u[k] = 3.0 + 4.3*Gr.zl_half[k]/1000.0 - RS.u0
+        if Gr.zp_half[k] > 795.0:
+            thetal[k] = 295.0 + (Gr.zp_half[k] - 795.0)**(1.0/3.0)
+            qt[k] = (5.0 - 3.0 * (1.0 - np.exp(-(Gr.zp_half[k] - 795.0)/500.0)))/1000.0
+        v[k] = -9.0 + 5.6 * Gr.zp_half[k]/1000.0 - RS.v0
+        u[k] = 3.0 + 4.3*Gr.zp_half[k]/1000.0 - RS.u0
 
     def compute_thetal(p_,T_,ql_):
         theta_ = T_ / (p_/p_tilde)**(287.0/cp_ref)
@@ -685,7 +802,7 @@ def InitDYCOMS_RF02(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariable
                 PV.values[ijk + qt_varshift]  = qt[k]
 
                 #Now set the entropy prognostic variable including a potential temperature perturbation
-                if Gr.zl_half[k] < 795.0:
+                if Gr.zp_half[k] < 795.0:
                     theta_pert_ = (theta_pert[ijk] - 0.5)* 0.1
                 else:
                     theta_pert_ = 0.0
@@ -740,15 +857,15 @@ def InitSmoke(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
         cdef double theta_pert_
 
     for k in xrange(Gr.dims.nlg[2]):
-        if Gr.zl_half[k] <=  687.5:
+        if Gr.zp_half[k] <=  687.5:
             theta[k] = 288.0
             smoke[k] = 1.0
-        elif Gr.zl_half[k] >= 687.5 and Gr.zl_half[k] <= 712.5:
-            theta[k] = 288.0 + (Gr.zl_half[k] - 687.5) * 0.28
-            smoke[k] = 1.0 - 0.04 * (Gr.zl_half[k] - 687.5)
-            print k, Gr.zl_half[k], smoke[k]
+        elif Gr.zp_half[k] >= 687.5 and Gr.zp_half[k] <= 712.5:
+            theta[k] = 288.0 + (Gr.zp_half[k] - 687.5) * 0.28
+            smoke[k] = 1.0 - 0.04 * (Gr.zp_half[k] - 687.5)
+            print k, Gr.zp_half[k], smoke[k]
         else:
-            theta[k] = 295.0 + (Gr.zl_half[k] - 712.5) * 1e-4
+            theta[k] = 295.0 + (Gr.zp_half[k] - 712.5) * 1e-4
             smoke[k] = 0.0
 
     cdef double [:] p0 = RS.p0_half
@@ -765,7 +882,7 @@ def InitSmoke(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
                 PV.values[w_varshift + ijk] = 0.0
 
                 #Now set the entropy prognostic variable including a potential temperature perturbation
-                if Gr.zl_half[k] < 700.0:
+                if Gr.zp_half[k] < 700.0:
                     theta_pert_ = (theta_pert[ijk] - 0.5)* 0.1
                 else:
                     theta_pert_ = 0.0
@@ -782,7 +899,7 @@ def InitSmoke(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
                 jshift = j * Gr.dims.nlg[2]
                 for k in xrange(Gr.dims.nlg[2]):
                     ijk = ishift + jshift + k
-                    if Gr.zl_half[k] < 700.0:
+                    if Gr.zp_half[k] < 700.0:
                         PV.values[e_varshift + ijk] = 0.1
                     else:
                         PV.values[e_varshift + ijk] = 0.0
@@ -827,26 +944,26 @@ def InitRico(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
     for k in xrange(Gr.dims.nlg[2]):
 
         #Set Thetal profile
-        if Gr.zl_half[k] <= 740.0:
+        if Gr.zp_half[k] <= 740.0:
             theta[k] = 297.9
         else:
-            theta[k] = 297.9 + (317.0-297.9)/(4000.0-740.0)*(Gr.zl_half[k] - 740.0)
+            theta[k] = 297.9 + (317.0-297.9)/(4000.0-740.0)*(Gr.zp_half[k] - 740.0)
 
 
         #Set qt profile
-        if Gr.zl_half[k] <= 740.0:
-            qt[k] =  16.0 + (13.8 - 16.0)/740.0 * Gr.zl_half[k]
-        elif Gr.zl_half[k] > 740.0 and Gr.zl_half[k] <= 3260.0:
-            qt[k] = 13.8 + (2.4 - 13.8)/(3260.0-740.0) * (Gr.zl_half[k] - 740.0)
+        if Gr.zp_half[k] <= 740.0:
+            qt[k] =  16.0 + (13.8 - 16.0)/740.0 * Gr.zp_half[k]
+        elif Gr.zp_half[k] > 740.0 and Gr.zp_half[k] <= 3260.0:
+            qt[k] = 13.8 + (2.4 - 13.8)/(3260.0-740.0) * (Gr.zp_half[k] - 740.0)
         else:
-            qt[k] = 2.4 + (1.8-2.4)/(4000.0-3260.0)*(Gr.zl_half[k] - 3260.0)
+            qt[k] = 2.4 + (1.8-2.4)/(4000.0-3260.0)*(Gr.zp_half[k] - 3260.0)
 
 
         #Change units to kg/kg
         qt[k]/= 1000.0
 
         #Set u profile
-        u[k] = -9.9 + 2.0e-3 * Gr.zl_half[k]
+        u[k] = -9.9 + 2.0e-3 * Gr.zp_half[k]
         #set v profile
         v[k] = -3.8
     #Set velocities for Galilean transformation
@@ -867,7 +984,7 @@ def InitRico(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
                 PV.values[u_varshift + ijk] = u[k] - RS.u0
                 PV.values[v_varshift + ijk] = v[k] - RS.v0
                 PV.values[w_varshift + ijk] = 0.0
-                if Gr.zl_half[k] <= 740.0:
+                if Gr.zp_half[k] <= 740.0:
                     temp = (theta[k] + (theta_pert[count])) * exner_c(RS.p0_half[k])
                     qt_ = qt[k]+qt_pert[count]
                 else:
@@ -885,7 +1002,7 @@ def InitRico(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
                 jshift = j * Gr.dims.nlg[2]
                 for k in xrange(Gr.dims.nlg[2]):
                     ijk = ishift + jshift + k
-                    if Gr.zl_half[k] <= 740.0:
+                    if Gr.zp_half[k] <= 740.0:
                         PV.values[e_varshift + ijk] = 0.1
 
 
@@ -1354,8 +1471,6 @@ def InitCGILS(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
         q_data[index] = q_data[index]/ (1.0 + q_data[index])
 
 
-
-
     # Get the surface information we need from the data file
     RS.Tg= data.variables['Tg'][0,0,0]
     RS.Pg= data.variables['Ps'][0,0,0]
@@ -1367,11 +1482,7 @@ def InitCGILS(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
     pv_ = Th.get_pv_star(RS.Tg)*rh_srf
     RS.qtg =  eps_v * pv_ / (RS.Pg + (eps_v-1.0)*pv_)
 
-
     RS.initialize(Gr ,Th, NS, Pa)
-
-
-
 
     cdef:
         Py_ssize_t i, j, k, ijk, ishift, jshift
@@ -1567,7 +1678,7 @@ def InitCGILS(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
                 PV.values[ijk + qt_varshift]  = qt[k]
 
                 #Now set the entropy prognostic variable including a potential temperature perturbation
-                if Gr.zl_half[k] < 200.0:
+                if Gr.zp_half[k] < 200.0:
                     theta_pert_ = (theta_pert[ijk] - 0.5)* 0.1
                 else:
                     theta_pert_ = 0.0
@@ -1577,9 +1688,6 @@ def InitCGILS(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
 
 
     return
-
-
-
 
 
 
@@ -1694,7 +1802,276 @@ def InitZGILS(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
 
     return
 
+def InitTRMM_LBA(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
+                       ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa , LatentHeat LH):
 
+    reference_profiles = AdjustedMoistAdiabat(namelist, LH, Pa)
+
+    RS.Tg  = 296.85   # surface values for reference state (RS) which outputs p0 rho0 alpha0
+    RS.Pg  = 991.3*100
+    pvg = Th.get_pv_star(RS.Tg)
+    RS.qtg = eps_v * pvg/(RS.Pg - pvg)
+    # TRMM_LBA inputs
+
+    z_in = np.array([0.130,  0.464,  0.573,  1.100,  1.653,  2.216,  2.760,
+                     3.297,  3.824,  4.327,  4.787,  5.242,  5.686,  6.131,
+                     6.578,  6.996,  7.431,  7.881,  8.300,  8.718,  9.149,
+                     9.611, 10.084, 10.573, 11.008, 11.460, 11.966, 12.472,
+                    12.971, 13.478, 13.971, 14.443, 14.956, 15.458, 16.019,
+                    16.491, 16.961, 17.442, 17.934, 18.397, 18.851, 19.331,
+                    19.809, 20.321, 20.813, 21.329, 30.000]) * 1000 - 130.0 #LES z is in meters
+
+    p_in = np.array([991.3, 954.2, 942.0, 886.9, 831.5, 778.9, 729.8,
+                     684.0, 641.7, 603.2, 570.1, 538.6, 509.1, 480.4,
+                     454.0, 429.6, 405.7, 382.5, 361.1, 340.9, 321.2,
+                     301.2, 281.8, 263.1, 246.1, 230.1, 213.2, 197.0,
+                     182.3, 167.9, 154.9, 143.0, 131.1, 119.7, 108.9,
+                     100.1,  92.1,  84.6,  77.5,  71.4,  65.9,  60.7,
+                      55.9,  51.3,  47.2,  43.3,  10.3]) * 100 # LES pres is in pasc
+
+    T_in = np.array([23.70,  23.30,  22.57,  19.90,  16.91,  14.09,  11.13,
+                      8.29,   5.38,   2.29,  -0.66,  -3.02,  -5.28,  -7.42,
+                    -10.34, -12.69, -15.70, -19.21, -21.81, -24.73, -27.76,
+                    -30.93, -34.62, -38.58, -42.30, -46.07, -50.03, -54.67,
+                    -59.16, -63.60, -67.68, -70.77, -74.41, -77.51, -80.64,
+                    -80.69, -80.00, -81.38, -81.17, -78.32, -74.77, -74.52,
+                    -72.62, -70.87, -69.19, -66.90, -66.90]) + 273.15 # LES T is in deg K
+
+    RH_in = np.array([98.00,  86.00,  88.56,  87.44,  86.67,  83.67,  79.56,
+                      84.78,  84.78,  89.33,  94.33,  92.00,  85.22,  77.33,
+                      80.11,  66.11,  72.11,  72.67,  52.22,  54.67,  51.00,
+                      43.78,  40.56,  43.11,  54.78,  46.11,  42.33,  43.22,
+                      45.33,  39.78,  33.78,  28.78,  24.67,  20.67,  17.67,
+                      17.11,  16.22,  14.22,  13.00,  13.00,  12.22,   9.56,
+                       7.78,   5.89,   4.33,   3.00,   3.00])
+
+    u_in = np.array([0.00,   0.81,   1.17,   3.44,   3.53,   3.88,   4.09,
+                     3.97,   1.22,   0.16,  -1.22,  -1.72,  -2.77,  -2.65,
+                    -0.64,  -0.07,  -1.90,  -2.70,  -2.99,  -3.66,  -5.05,
+                    -6.64,  -4.74,  -5.30,  -6.07,  -4.26,  -7.52,  -8.88,
+                    -9.00,  -7.77,  -5.37,  -3.88,  -1.15,  -2.36,  -9.20,
+                    -8.01,  -5.68,  -8.83, -14.51, -15.55, -15.36, -17.67,
+                   -17.82, -18.94, -15.92, -15.32, -15.32])
+
+    v_in = np.array([-0.40,  -3.51,  -3.88,  -4.77,  -5.28,  -5.85,  -5.60,
+                     -2.67,  -1.47,   0.57,   0.89,  -0.08,   1.11,   2.15,
+                      3.12,   3.22,   3.34,   1.91,   1.15,   1.01,  -0.57,
+                     -0.67,   0.31,   2.97,   2.32,   2.66,   4.79,   3.40,
+                      3.14,   3.93,   7.57,   2.58,   2.50,   6.44,   6.84,
+                      0.19,  -2.20,  -3.60,   0.56,   6.68,   9.41,   7.03,
+                      5.32,   1.14,  -0.65,   5.27,   5.27])
+
+
+    RS.initialize(Gr ,Th, NS, Pa)
+
+
+    cdef:
+        Py_ssize_t i, j, k, ijk, ishift, jshift
+        Py_ssize_t istride = Gr.dims.nlg[1] * Gr.dims.nlg[2]
+        Py_ssize_t jstride = Gr.dims.nlg[2]
+        Py_ssize_t u_varshift = PV.get_varshift(Gr,'u')
+        Py_ssize_t v_varshift = PV.get_varshift(Gr,'v')
+        Py_ssize_t w_varshift = PV.get_varshift(Gr,'w')
+        Py_ssize_t s_varshift = PV.get_varshift(Gr,'s')
+        Py_ssize_t qt_varshift = PV.get_varshift(Gr,'qt')
+        double [:] T = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c') # change to temp interp to zl_hlaf (LES press is in pasc)
+        double [:] qt = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
+        double [:] u = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
+        double [:] v = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
+
+    T = np.interp(Gr.z_half,z_in,T_in)
+    p = np.interp(Gr.z_half,z_in,p_in)
+    RH = np.interp(Gr.z_half,z_in,RH_in)
+    u = np.interp(Gr.z_half,z_in,u_in)
+    v = np.interp(Gr.z_half,z_in,v_in)
+
+      #Set velocities for Galilean transformation
+    RS.u0 = 0.5 * (np.amax(u)+np.amin(u))
+    RS.v0 = 0.5 * (np.amax(v)+np.amin(v))
+
+    #Generate initial perturbations (here we are generating more than we need)
+    #random fluctuations
+    #I need to perturbed the temperature and only later calculate the entropy
+    np.random.seed(Pa.rank)
+    cdef double [:] T_pert = np.random.random_sample(Gr.dims.npg)
+    cdef double T_pert_
+    cdef double pv_star
+    cdef double qv_star
+
+    epsi = 287.1/461.5
+    # Here we fill in the 3D arrays
+    # We perform saturation adjustment on the S6 data, although this should not actually be necessary (but doesn't hurt)
+    for i in xrange(Gr.dims.nlg[0]):
+        ishift = istride * i
+        for j in xrange(Gr.dims.nlg[1]):
+            jshift = jstride * j
+            for k in xrange(Gr.dims.nlg[2]):
+                ijk = ishift + jshift + k
+                pv_star = Th.get_pv_star(T[k])
+                qv_star = pv_star*epsi/(p[k]- pv_star + epsi*pv_star*RH[k]/100.0) # eq. 37 in pressel et al and the def of RH
+                qt[k] = qv_star*RH[k]/100.0
+                PV.values[ijk + u_varshift] = u[k] - RS.u0
+                PV.values[ijk + v_varshift] = v[k] - RS.v0
+                PV.values[ijk + w_varshift] = 0.0
+                PV.values[ijk + qt_varshift]  = qt[k]
+
+                if Gr.z_half[k] < 1000.0:
+                    T_pert_ = (T_pert[ijk] - 0.5)* 0.1
+                    PV.values[ijk + s_varshift] = Th.entropy(RS.p0_half[k], T[k] + T_pert_, qt[k], 0.0, 0.0)
+                else:
+                    PV.values[ijk + s_varshift] = Th.entropy(RS.p0_half[k], T[k] , qt[k], 0.0, 0.0)
+
+    return
+
+def InitARM_SGP(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
+                       ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa , LatentHeat LH):
+
+    reference_profiles = AdjustedMoistAdiabat(namelist, LH, Pa)
+
+    RS.Tg  = 299.0   # surface values for reference state (RS) which outputs p0 rho0 alpha0
+    RS.Pg  = 970.0*100
+    RS.qtg = 15.2/1000
+
+    # ARM_SGP inputs
+
+    z_in = np.array([0.0, 50.0,350.0, 650.0, 700.0, 1300.0, 2500.0, 5500.0 ]) #LES z is in meters
+    Theta_in = np.array([299.0, 301.5, 302.5, 303.53, 303.7, 307.13, 314.0, 343.2]) # K
+    qt_in = np.array([15.2,15.17,14.98,14.8,14.7,13.5,3.0,3.0])/1000 # qt should be in kg/kg
+    u = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')+10
+    v = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
+
+    RS.initialize(Gr ,Th, NS, Pa)
+
+
+    cdef:
+        Py_ssize_t i, j, k, ijk, ishift, jshift
+        Py_ssize_t istride = Gr.dims.nlg[1] * Gr.dims.nlg[2]
+        Py_ssize_t jstride = Gr.dims.nlg[2]
+        Py_ssize_t u_varshift = PV.get_varshift(Gr,'u')
+        Py_ssize_t v_varshift = PV.get_varshift(Gr,'v')
+        Py_ssize_t w_varshift = PV.get_varshift(Gr,'w')
+        Py_ssize_t s_varshift = PV.get_varshift(Gr,'s')
+        Py_ssize_t qt_varshift = PV.get_varshift(Gr,'qt')
+        double [:] Theta = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c') # change to temp interp to zl_hlaf (LES press is in pasc)
+        double [:] qt = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
+        #double [:] u = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
+        #double [:] v = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
+
+    Theta = np.interp(Gr.z_half,z_in,Theta_in)
+    qt = np.interp(Gr.z_half,z_in,qt_in)
+
+
+      #Set velocities for Galilean transformation
+    RS.u0 = 0.5 * (np.amax(u)+np.amin(u))
+    RS.v0 = 0.5 * (np.amax(v)+np.amin(v))
+
+    #Generate initial perturbations (here we are generating more than we need)
+    #random fluctuations
+    #I need to perturbed the temperature and only later calculate the entropy
+    np.random.seed(Pa.rank)
+    cdef double [:] T_pert = np.random.random_sample(Gr.dims.npg)
+    cdef double T_pert_
+    cdef double pv_star
+    cdef double qv_star
+
+    epsi = 287.1/461.5
+    # Here we fill in the 3D arrays
+    # We perform saturation adjustment on the S6 data, although this should not actually be necessary (but doesn't hurt)
+    for i in xrange(Gr.dims.nlg[0]):
+        ishift = istride * i
+        for j in xrange(Gr.dims.nlg[1]):
+            jshift = jstride * j
+            for k in xrange(Gr.dims.nlg[2]):
+                ijk = ishift + jshift + k
+                PV.values[ijk + u_varshift] = u[k] - RS.u0
+                PV.values[ijk + v_varshift] = v[k] - RS.v0
+                PV.values[ijk + w_varshift] = 0.0
+                PV.values[ijk + qt_varshift]  = qt[k]
+                T  = Theta[k]*exner_c(RS.p0_half[k])
+                if Gr.z_half[k] < 200.0: # perturbation temp on the lower 200 m and decrease linearly from 0 to 200m
+                    T_pert_ = T_pert[ijk]*(1 - Gr.z_half[k]/200)* 0.1
+                    PV.values[ijk + s_varshift] = Th.entropy(RS.p0_half[k], T + T_pert_, qt[k], 0.0, 0.0)
+                else:
+                    PV.values[ijk + s_varshift] = Th.entropy(RS.p0_half[k], T , qt[k], 0.0, 0.0)
+    return
+
+
+def InitGATE_III(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
+                       ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa , LatentHeat LH):
+
+    reference_profiles = AdjustedMoistAdiabat(namelist, LH, Pa)
+
+    RS.Tg  = 299.88   # surface values for reference state (RS) which outputs p0 rho0 alpha0
+    RS.Pg  = 1012.0*100.0
+    RS.qtg = 16.5/1000.0
+
+    # GATE_III inputs
+    T_in = np.array([299.184, 294.836, 294.261, 288.773, 276.698, 265.004, 253.930, 243.662, 227.674, 214.266, 207.757, 201.973, 198.278, 197.414, 198.110, 198.110])
+    z_T_in = np.array([0.0, 0.492, 0.700, 1.698, 3.928, 6.039, 7.795, 9.137, 11.055, 12.645, 13.521, 14.486, 15.448, 16.436, 17.293, 22.0])*1000.0 # for km
+    z_in  = np.array([ 0.0,   0.5,  1.0,  1.5,  2.0,   2.5,    3.0,   3.5,   4.0,   4.5,   5.0,  5.5,  6.0,  6.5, 7.0, 7.5, 8.0,  8.5,   9.0,   9.5,  10.0,   10.5,   11.0, 11.5, 12.0, 12.5, 13.0, 13.5, 14.0, 14.5, 15.0, 15.5, 16.0, 16.5, 17.0, 17.5, 18.0, 27.0]) * 1000.0 #LES z is in meters
+    qt_in = np.array([16.5,  16.5, 13.5, 12.0, 10.0,   8.7,    7.1,   6.1,   5.2,   4.5,   3.6,  3.0,  2.3, 1.75, 1.3, 0.9, 0.5, 0.25, 0.125, 0.065, 0.003, 0.0015, 0.0007,  0.0003,  0.0001,  0.0001,  0.0001,  0.0001,  0.0001,  0.0001,  0.0001,  0.0001,  0.0001,  0.0001,  0.0001,  0.0001,  0.0001, 0.0001])/1000 # qt should be in kg/kg
+    U_in  = np.array([  -1, -1.75, -2.5, -3.6, -6.0, -8.75, -11.75, -13.0, -13.1, -12.1, -11.0, -8.5, -5.0, -2.6, 0.0, 0.5, 0.4,  0.3,   0.0,  -1.0,  -2.5,   -3.5,   -4.5, -4.8, -5.0, -3.5, -2.0, -1.0, -1.0, -1.0, -1.5, -2.0, -2.5, -2.6, -2.7, -3.0, -3.0, -3.0])# [m/s]
+    v = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
+
+    RS.initialize(Gr ,Th, NS, Pa)
+
+    cdef:
+        Py_ssize_t i, j, k, ijk, ishift, jshift
+        Py_ssize_t istride = Gr.dims.nlg[1] * Gr.dims.nlg[2]
+        Py_ssize_t jstride = Gr.dims.nlg[2]
+        Py_ssize_t u_varshift = PV.get_varshift(Gr,'u')
+        Py_ssize_t v_varshift = PV.get_varshift(Gr,'v')
+        Py_ssize_t w_varshift = PV.get_varshift(Gr,'w')
+        Py_ssize_t s_varshift = PV.get_varshift(Gr,'s')
+        Py_ssize_t qt_varshift = PV.get_varshift(Gr,'qt')
+        double [:] T = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c') # change to temp interp to zl_half (LES press is in pasc)
+        double [:] TK = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
+        double [:] qt = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
+        double [:] u = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
+        #double [:] v = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
+
+    T = np.interp(Gr.z_half,z_T_in,T_in)
+    T[Gr.dims.gw-1] = T[Gr.dims.gw]
+    T[Gr.dims.gw-2] = T[Gr.dims.gw+1]
+    T[Gr.dims.gw-3] = T[Gr.dims.gw+2]
+    #T[1] = T[Gr.gw+1]
+
+    qt = np.interp(Gr.z_half,z_in,qt_in)
+    u  = np.interp(Gr.z_half,z_in,U_in)
+    #Set velocities for Galilean transformation
+    RS.u0 = 0.5 * (np.amax(u)+np.amin(u))
+    RS.v0 = 0.5 * (np.amax(v)+np.amin(v))
+
+    #Generate initial perturbations (here we are generating more than we need)
+    #random fluctuations
+    #I need to perturbed the temperature and only later calculate the entropy
+    np.random.seed(Pa.rank)
+    cdef double [:] T_pert = np.random.random_sample(Gr.dims.npg)
+    cdef double T_pert_
+    cdef double pv_star
+    cdef double qv_star
+
+    #epsi = 287.1/461.5
+    # Here we fill in the 3D arrays
+    # We perform saturation adjustment on the S6 data, although this should not actually be necessary (but doesn't hurt)
+    for i in xrange(Gr.dims.nlg[0]):
+        ishift = istride * i
+        for j in xrange(Gr.dims.nlg[1]):
+            jshift = jstride * j
+            for k in xrange(Gr.dims.nlg[2]):
+                ijk = ishift + jshift + k
+                PV.values[ijk + u_varshift] = u[k] - RS.u0
+                PV.values[ijk + v_varshift] = v[k] - RS.v0
+                PV.values[ijk + w_varshift] = 0.0
+                PV.values[ijk + qt_varshift]  = qt[k]
+
+                if Gr.z_half[k] < 200.0: # perturbation temp on the lower 200 m and decrease linearly from 0 to 200m
+                    T_pert_ = T_pert[ijk]*(1 - Gr.z_half[k]/200)* 0.1
+                    PV.values[ijk + s_varshift] = Th.entropy(RS.p0_half[k], T[k]+ T_pert_, qt[k], 0.0, 0.0)#
+                else:
+                    PV.values[ijk + s_varshift] = Th.entropy(RS.p0_half[k], T[k] , qt[k], 0.0, 0.0)
+
+    return
 
 def AuxillaryVariables(nml, PrognosticVariables.PrognosticVariables PV,
                        DiagnosticVariables.DiagnosticVariables DV, ParallelMPI.ParallelMPI Pa):
@@ -1704,7 +2081,6 @@ def AuxillaryVariables(nml, PrognosticVariables.PrognosticVariables PV,
         PV.add_variable('smoke', 'kg/kg', 'smoke', 'radiatively active smoke', "sym", "scalar", Pa)
         return
     return
-
 
 def thetal_mpace(p_, t_, ql_):
     return t_*(p_tilde/p_)**(Rd/cpd)*np.exp(-(2.26e6*ql_)/(cpd*263.0))

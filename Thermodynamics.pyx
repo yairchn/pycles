@@ -16,8 +16,6 @@ cimport ReferenceState
 cimport PrognosticVariables
 cimport DiagnosticVariables
 from NetCDFIO cimport NetCDFIO_Fields, NetCDFIO_Stats
-
-
 from scipy.integrate import odeint
 
 include 'parameters.pxi'
@@ -45,10 +43,11 @@ cdef class ClausiusClapeyron:
     def initialize(self, namelist, LatentHeat LH, ParallelMPI.ParallelMPI Par):
         self.LT = Lookup.Lookup()
 
+
         #Now integrate the ClausiusClapeyron equation
         cdef:
             double Tmin
-            double Tmax
+            double Tmax,a
             long n_lookup
             double [:] pv
 
@@ -56,8 +55,8 @@ cdef class ClausiusClapeyron:
             Tmin = namelist['ClausiusClapeyron']['temperature_min']
         except:
             Par.root_print('Clasius-Clayperon lookup table temperature_min not '
-                           'given in name list taking default of 100.15 K')
-            Tmin = 100.15
+                           'given in name list taking default of 180 K')
+            Tmin = 1.0
 
         try:
             Tmax = namelist['ClausiusClapeyron']['temperature_max']
@@ -80,6 +79,7 @@ cdef class ClausiusClapeyron:
         tp_close_index = np.max(np.where(T<=Tt))
 
         #Check to make sure that T_tilde is not in T
+
         if T[tp_close_index] == Tt:
             Par.root_print('Array of temperatures for ClasiusClapyeron lookup table contains Tt  \n')
             Par.root_print('Pick different values for ClasiusClapyeron Tmin and Tmax in lookup table \n')
@@ -92,18 +92,17 @@ cdef class ClausiusClapeyron:
 
         #Now set up the RHS
         def rhs(z,T_):
-            lam = LH.Lambda(T_)
+            lam = 0.1# LH.Lambda(T_)
+            print lam
             L = LH.L(T_,lam)
             return L/(Rv * T_ * T_)
 
         #set the initial condition
         pv0 = np.log(pv_star_t)
-
-        #Integrate
-        pv_above_Tt = np.exp(odeint(rhs,pv0,T_above_Tt,hmax=0.1)[1:])
         pv_below_Tt = np.exp(odeint(rhs,pv0,T_below_Tt,hmax=0.1)[1:])[::-1]
-        pv = np.append(pv_below_Tt,pv_above_Tt )
+        pv_above_Tt = np.exp(odeint(rhs,pv0,T_above_Tt,hmax=0.1)[1:])
 
+        pv = np.append(pv_below_Tt,pv_above_Tt )
         #For really small values of pv, set pv to a slightly less small number. This avoids problems in integrating
         #the reference profiles, when the reference temperature is <100K. For the vast majority of simulations this
         #modification should have no impact.
