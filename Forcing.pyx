@@ -126,10 +126,10 @@ cdef class ForcingBomex:
 
                 #Set large scale cooling
                 # Convert given form of tendencies (theta) to temperature tendency
-                if Gr.zl_half[k] <= 1500.0:
+                if Gr.zpl_half[k] <= 1500.0:
                     self.dtdt[k] = (-2.0/(3600 * 24.0))  * exner_c(RS.p0_half[k])     #K/s
-                if Gr.zl_half[k] > 1500.0:
-                    self.dtdt[k] = (-2.0/(3600 * 24.0) + (Gr.zl_half[k] - 1500.0)
+                if Gr.zpl_half[k] > 1500.0:
+                    self.dtdt[k] = (-2.0/(3600 * 24.0) + (Gr.zpl_half[k] - 1500.0)
                                     * (0.0 - -2.0/(3600 * 24.0)) / (3000.0 - 1500.0)) * exner_c(RS.p0_half[k])
 
                 #Set large scale drying
@@ -491,8 +491,8 @@ cdef class ForcingRico:
         with nogil:
             for k in range(Gr.dims.nlg[2]):
                 self.dtdt[k] = self.dtdt[k] * exner_c(RS.p0_half[k])
-                if Gr.zl_half[k] <= 2260.0:
-                    self.subsidence[k] = -(0.005/2260.0) * Gr.zl_half[k]
+                if Gr.zpl_half[k] <= 2260.0:
+                    self.subsidence[k] = -(0.005/2260.0) * Gr.zpl_half[k]
                 else:
                     self.subsidence[k] = -0.005
                 if Gr.zpl_half[k]<=2980.0:
@@ -596,8 +596,8 @@ cdef class ForcingIsdac:
 
         with nogil:
             for k in range(Gr.dims.nlg[2]):
-                if Gr.zl_half[k] < 825.0:
-                    self.w_half[k] = -Gr.zl_half[k] * self.divergence
+                if Gr.zpl_half[k] < 825.0:
+                    self.w_half[k] = -Gr.zpl_half[k] * self.divergence
                 else:
                     self.w_half[k] = -0.4125e-2
 
@@ -605,24 +605,24 @@ cdef class ForcingIsdac:
         for k in xrange(Gr.dims.nlg[2]):
 
             #Set thetal and qt profile
-            if Gr.zl_half[k] < 400.0:
-                thetal[k] = 265.0 + 0.004 * (Gr.zl_half[k] - 400.0)
-                self.initial_qt[k] = 1.5 - 0.00075 * (Gr.zl_half[k] - 400.0)
-            if 400.0 <= Gr.zl_half[k] < 825.0:
+            if Gr.zpl_half[k] < 400.0:
+                thetal[k] = 265.0 + 0.004 * (Gr.zpl_half[k] - 400.0)
+                self.initial_qt[k] = 1.5 - 0.00075 * (Gr.zpl_half[k] - 400.0)
+            if 400.0 <= Gr.zpl_half[k] < 825.0:
                 thetal[k] = 265.0
                 self.initial_qt[k] = 1.5
-            if 825.0 <= Gr.zl_half[k] < 2045.0:
-                thetal[k] = 266.0 + (Gr.zl_half[k] - 825.0) ** 0.3
+            if 825.0 <= Gr.zpl_half[k] < 2045.0:
+                thetal[k] = 266.0 + (Gr.zpl_half[k] - 825.0) ** 0.3
                 self.initial_qt[k] = 1.2
-            if Gr.zl_half[k] >= 2045.0:
-                thetal[k] = 271.0 + (Gr.zl_half[k] - 2000.0) ** 0.33
-                self.initial_qt[k] = 0.5 - 0.000075 * (Gr.zl_half[k] - 2045.0)
+            if Gr.zpl_half[k] >= 2045.0:
+                thetal[k] = 271.0 + (Gr.zpl_half[k] - 2000.0) ** 0.33
+                self.initial_qt[k] = 0.5 - 0.000075 * (Gr.zpl_half[k] - 2045.0)
 
             #Change units to kg/kg
             self.initial_qt[k]/= 1000.0
 
             #Set velocity profile
-            self.initial_v[k] = -2.0 + 0.003 * Gr.zl_half[k]
+            self.initial_v[k] = -2.0 + 0.003 * Gr.zpl_half[k]
             self.initial_u[k] = -7.0
 
             #Now get entropy profile
@@ -631,16 +631,16 @@ cdef class ForcingIsdac:
 
 
             #Nudging coefficients
-            if Gr.zl_half[k] <= 1200.0:
+            if Gr.zpl_half[k] <= 1200.0:
                 self.nudge_coeff_scalars[k] = 0.0
-            if 1200.0 < Gr.zl_half[k] <= 1500.0:
-                self.nudge_coeff_scalars[k] = (1/3600.0)*0.5*(1.0 - cos(pi * (Gr.zl_half[k] - 1200.0)/300.0))
-            if Gr.zl_half[k] > 1500.0:
+            if 1200.0 < Gr.zpl_half[k] <= 1500.0:
+                self.nudge_coeff_scalars[k] = (1/3600.0)*0.5*(1.0 - cos(pi * (Gr.zpl_half[k] - 1200.0)/300.0))
+            if Gr.zpl_half[k] > 1500.0:
                 self.nudge_coeff_scalars[k] = 1/3600.0
 
-            if Gr.zl_half[k] <= 825.0:
-                self.nudge_coeff_velocities[k] = (1/7200.0)*0.5*(1 - cos(pi*Gr.zl_half[k]/825.0))
-            if Gr.zl_half[k] > 825.0:
+            if Gr.zpl_half[k] <= 825.0:
+                self.nudge_coeff_velocities[k] = (1/7200.0)*0.5*(1 - cos(pi*Gr.zpl_half[k]/825.0))
+            if Gr.zpl_half[k] > 825.0:
                 self.nudge_coeff_velocities[k] = 1/7200.0
 
 
@@ -840,21 +840,21 @@ cdef class ForcingIsdacCC:
 
 
         for k in range(Gr.dims.nlg[2]):
-            if Gr.zl_half[k] <= self.z_top:
-                self.w_half[k] = -self.divergence * self.z_top * np.cos(pi*0.5*(self.z_top - Gr.zl_half[k])/self.z_top)
+            if Gr.zpl_half[k] <= self.z_top:
+                self.w_half[k] = -self.divergence * self.z_top * np.cos(pi*0.5*(self.z_top - Gr.zpl_half[k])/self.z_top)
             else:
-                self.w_half[k] = -self.divergence * self.z_top * np.cos(pi*0.5*(Gr.zl_half[k] - self.z_top)/(10000.0 - self.z_top))
+                self.w_half[k] = -self.divergence * self.z_top * np.cos(pi*0.5*(Gr.zpl_half[k] - self.z_top)/(10000.0 - self.z_top))
 
         #Get velocity profiles for nudging
         for k in xrange(Gr.dims.nlg[2]):
 
             #Set velocity profile
-            self.initial_v[k] = -2.0 + 0.003 * Gr.zl_half[k]
+            self.initial_v[k] = -2.0 + 0.003 * Gr.zpl_half[k]
             self.initial_u[k] = -7.0
 
-            if Gr.zl_half[k] <= self.z_top:
-                self.nudge_coeff_velocities[k] = (1/7200.0)*0.5*(1 - cos(pi*Gr.zl_half[k]/self.z_top))
-            if Gr.zl_half[k] > self.z_top:
+            if Gr.zpl_half[k] <= self.z_top:
+                self.nudge_coeff_velocities[k] = (1/7200.0)*0.5*(1 - cos(pi*Gr.zpl_half[k]/self.z_top))
+            if Gr.zpl_half[k] > self.z_top:
                 self.nudge_coeff_velocities[k] = 1/7200.0
 
             #Now get entropy profile
@@ -863,7 +863,7 @@ cdef class ForcingIsdacCC:
             self.initial_qt[k] = RS.ic_qt[k]
 
             #Nudging coefficients
-            if Gr.zl_half[k] <= 1200.0:
+            if Gr.zpl_half[k] <= 1200.0:
                 self.nudge_coeff_scalars[k] = 0.0
             else:
                 self.nudge_coeff_scalars[k] = 1/3600.0
@@ -1433,9 +1433,9 @@ cdef class ForcingCGILS:
 
         # Obtain the moisture floor and find the max index corresponding to z <= 1300 m
 
-        self.qt_floor = np.interp(1300.0, Gr.zl_half, self.nudge_qt)
+        self.qt_floor = np.interp(1300.0, Gr.zpl_half, self.nudge_qt)
         for k in range(Gr.dims.gw, Gr.dims.nlg[2]-Gr.dims.gw):
-            if Gr.zl_half[k] > 1300.0:
+            if Gr.zpl_half[k] > 1300.0:
                 break
             self.floor_index = k
 
@@ -1446,12 +1446,12 @@ cdef class ForcingCGILS:
 
         with nogil:
             for k in range(Gr.dims.nlg[2]):
-                if Gr.zl_half[k] < self.z_relax:
+                if Gr.zpl_half[k] < self.z_relax:
                     self.gamma_zhalf[k] = 0.0
-                elif Gr.zl_half[k] > self.z_relax_plus:
+                elif Gr.zpl_half[k] > self.z_relax_plus:
                     self.gamma_zhalf[k] = self.tau_inverse
                 else:
-                    self.gamma_zhalf[k] = 0.5*self.tau_inverse * (1.0 - cos(pi* (Gr.zl_half[k]-self.z_relax)/(self.z_relax_plus-self.z_relax)))
+                    self.gamma_zhalf[k] = 0.5*self.tau_inverse * (1.0 - cos(pi* (Gr.zpl_half[k]-self.z_relax)/(self.z_relax_plus-self.z_relax)))
 
                 if Gr.zl[k] < self.z_relax:
                     self.gamma_z[k] = 0.0
@@ -1772,28 +1772,28 @@ cdef class ForcingZGILS:
         apply_subsidence(&Gr.dims, &RS.rho0[0], &RS.rho0_half[0], &self.subsidence[0], &PV.values[qt_shift], &PV.tendencies[qt_shift])
 
         # Prepare for nudging by finding the boundary layer height
-        self.h_BL = Gr.z_half[Gr.dims.n[2]]
+        self.h_BL = Gr.zp_half[Gr.dims.n[2]]
         with nogil:
             for k in xrange(kmax, gw-1, -1):
                 if qtmean[k] <= self.alpha_h * self.forcing_ref.qt[k]:
-                    self.h_BL = Gr.zl_half[k]
+                    self.h_BL = Gr.zpl_half[k]
 
         # Now set the relaxation coefficient (depends on time-varying BL height diagnosed above)
         # Find the source term profiles for temperature, moisture nudging (2 components: free tropo and BL)
         cdef double [:] xi_relax = np.zeros(Gr.dims.nlg[2],dtype=np.double,order='c')
-        cdef double z_h, pv_star, qv_star
+        cdef double zp_h, pv_star, qv_star
         with nogil:
             for k in xrange(Gr.dims.nlg[2]):
                 self.source_rh_nudge[k] = 0.0
-                z_h = Gr.zl_half[k]/self.h_BL
-                if z_h < 1.2:
+                zp_h = Gr.zpl_half[k]/self.h_BL
+                if zp_h < 1.2:
                     xi_relax[k] = 0.0
-                elif z_h > 1.5:
+                elif zp_h > 1.5:
                     xi_relax[k] = self.tau_relax_inverse
                 else:
-                    xi_relax[k] = 0.5*self.tau_relax_inverse*(1.0 -   cos(pi*(z_h-1.2)/(1.5-1.2)))
+                    xi_relax[k] = 0.5*self.tau_relax_inverse*(1.0 -   cos(pi*(zp_h-1.2)/(1.5-1.2)))
                 # here we also set the nudging to 20% rh in the BL
-                if Gr.zl_half[k] < 2000.0:
+                if Gr.zpl_half[k] < 2000.0:
                     pv_star = self.CC.LT.fast_lookup(tmean[k])
                     qv_star = eps_v * pv_star/(RS.p0_half[k] + (eps_v-1.0)*pv_star)
                     if qtmean[k] < 0.2 * qv_star:
@@ -1922,8 +1922,8 @@ cdef class ForcingTRMM_LBA: # YAIR - check if indeed you wanna duplicate DyCOMS_
                       5.32,   1.14,  -0.65,   5.27,   5.27]),0.5)
 
 
-        self.nudge_u = np.interp(Gr.z_half,z_in,u_in)
-        self.nudge_v = np.interp(Gr.z_half,z_in,v_in)
+        self.nudge_u = np.interp(Gr.zp_half,z_in,u_in)
+        self.nudge_v = np.interp(Gr.zp_half,z_in,v_in)
 
         # Initialize arrays for the  nudging related source terms
         self.source_u_nudge = np.zeros(Gr.dims.nlg[2])
@@ -2015,7 +2015,7 @@ cdef class ForcingARM_SGP: # YAIR - check if indeed you wanna duplicate DyCOMS_R
         self.dtdt = np.zeros(Gr.dims.nlg[2],dtype=np.double,order='c')  # theta
         self.dqtdt = np.zeros(Gr.dims.nlg[2],dtype=np.double,order='c')
         for k in range(0,Gr.dims.nlg[2]):
-            if Gr.z_half[k] <= 200:
+            if Gr.zp_half[k] <= 200:
                 self.dqtdt[k] = 0.08
                 self.dtdt[k] = 0.0 - 0.125
 
@@ -2030,7 +2030,7 @@ cdef class ForcingARM_SGP: # YAIR - check if indeed you wanna duplicate DyCOMS_R
     cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState RS,
                  PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV,  ParallelMPI.ParallelMPI Pa,
                  TimeStepping.TimeStepping TS):
-        # Yair - this is incomplete
+
         t_in = np.array([0.0, 3.0, 6.0, 9.0, 12.0, 14.5]) * 3600.0 #LES time is in sec
         AT_in = np.array([0.0, 0.0, 0.0, -0.08, -0.016, -0.016])/3600.0  # Advective forcing for theta [K/h] converted to [K/sec]
         RT_in = np.array([-0.125, 0.0, 0.0, 0.0, 0.0, -0.1])/3600.0  # Radiative forcing for theta [K/h] converted to [K/sec]
@@ -2074,12 +2074,12 @@ cdef class ForcingARM_SGP: # YAIR - check if indeed you wanna duplicate DyCOMS_R
             dtdt_a = np.interp(TS.t,t_in,AT_in)
             dtdt_r = np.interp(TS.t,t_in,RT_in)
             for k in range(0,Gr.dims.nlg[2]):
-                if Gr.z_half[k] <=1000:
+                if Gr.zp_half[k] <=1000:
                     self.dqtdt[k] = dqtdt
                     self.dtdt[k]  = (dtdt_a + dtdt_r) * exner_c(RS.p0_half[k])
-                elif Gr.z_half[k] > 1000  and Gr.z_half[k] <= 2000:
-                    self.dqtdt[k] =   dqtdt*(1-(Gr.z_half[k]-1000)/1000)
-                    self.dtdt[k]  = (dtdt_a + dtdt_r) * exner_c(RS.p0_half[k])*(1-(Gr.z_half[k]-1000)/1000)
+                elif Gr.zp_half[k] > 1000  and Gr.zp_half[k] <= 2000:
+                    self.dqtdt[k] =   dqtdt*(1-(Gr.zp_half[k]-1000)/1000)
+                    self.dtdt[k]  = (dtdt_a + dtdt_r) * exner_c(RS.p0_half[k])*(1-(Gr.zp_half[k]-1000)/1000)
          # Now update entropy tendenci
         with nogil:
             for i in xrange(imin, imax):
@@ -2144,7 +2144,7 @@ cdef class ForcingGATE_III:
         self.nudge_u = np.zeros(Gr.dims.nlg[2],dtype=np.double,order='c')
         self.nudge_v = np.zeros(Gr.dims.nlg[2],dtype=np.double,order='c')
         #for k in range(0,Gr.dims.nlg[2]):
-        #    if Gr.zl_half[k] <= 200:
+        #    if Gr.zpl_half[k] <= 200:
         #        self.dqtdt[k] = 0.08
         #       self.dtdt[k] = 0.0 - 0.125
 
@@ -2187,12 +2187,12 @@ cdef class ForcingGATE_III:
             double [:] umean = Pa.HorizontalMean(Gr, &PV.values[u_shift])
             double [:] vmean = Pa.HorizontalMean(Gr, &PV.values[v_shift])
         # interpolate u_in
-        self.nudge_u = np.interp(Gr.zl_half,z_in,u_in)
+        self.nudge_u = np.interp(Gr.zpl_half,z_in,u_in)
         with nogil:
         # Nudge mean wind profiles through entire depth
             for k in xrange(kmin, kmax):
                 self.source_v_nudge[k] = -(vmean[k] + RS.v0) * self.tau_inverse
-                if Gr.zl_half[k] < 18000.0:
+                if Gr.zpl_half[k] < 18000.0:
                     self.source_u_nudge[k] = -(umean[k] + RS.u0 - self.nudge_u[k]) * self.tau_inverse
                 else:
                     self.source_u_nudge[k] = -(umean[k] + RS.u0) * self.tau_inverse
@@ -2209,9 +2209,9 @@ cdef class ForcingGATE_III:
 
         # interpolate radiative and advective forcing
         for k in xrange(kmin, kmax):
-            if Gr.zl_half[k] < 18000.0:
-                self.dqtdt[k] = np.interp(Gr.zl_half[k],z_in,Qtend_in)
-                self.dtdt[k]  = np.interp(Gr.zl_half[k],z_in,Ttend_in) + np.interp(Gr.zl_half[k],z_in,RAD_in) # T tendency is teh sum of radiative and advective
+            if Gr.zpl_half[k] < 18000.0:
+                self.dqtdt[k] = np.interp(Gr.zpl_half[k],z_in,Qtend_in)
+                self.dtdt[k]  = np.interp(Gr.zpl_half[k],z_in,Ttend_in) + np.interp(Gr.zpl_half[k],z_in,RAD_in) # T tendency is teh sum of radiative and advective
             else:
                 self.dqtdt[k] = 0.0
                 self.dtdt[k]  = 0.0
