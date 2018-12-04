@@ -81,13 +81,15 @@ cdef class Rayleigh:
             order='c')
         self.gamma_z = np.zeros((Gr.dims.nlg[2]), dtype=np.double, order='c')
         z_top = Gr.zpl[Gr.dims.nlg[2] - Gr.dims.gw]
-
+        z_top2 = Gr.dims.dx[2] * Gr.dims.n[2]
+        print 'z_top ', z_top
+        print 'z_top2 ', z_top2
         with nogil:
             for k in range(Gr.dims.nlg[2]):
-                if Gr.zp_half[k] >= z_top - self.z_d:
+                if Gr.zpl_half[k] >= z_top - self.z_d:
                     self.gamma_zhalf[
                         k] = self.gamma_r * sin((pi / 2.0) * (1.0 - (z_top - Gr.zpl_half[k]) / self.z_d))**2.0
-                if Gr.zp[k] >= z_top - self.z_d:
+                if Gr.zpl[k] >= z_top - self.z_d:
                     self.gamma_z[
                         k] = self.gamma_r * sin((pi / 2.0) * (1.0 - (z_top - Gr.zpl[k]) / self.z_d))**2.0
         return
