@@ -16,14 +16,13 @@ cimport Lookup
 cimport Thermodynamics
 import cython
 from Thermodynamics cimport LatentHeat, ClausiusClapeyron
-
-
 from NetCDFIO cimport NetCDFIO_Stats
 cimport ParallelMPI
 
 from libc.math cimport fmax, fmin, fabs
 
 cdef extern from "microphysics_arctic_1m.h":
+
     void sedimentation_velocity_rain(Grid.DimStruct *dims, double* density, double* nrain, double* qrain,
                                      double* qrain_velocity) nogil
     void sedimentation_velocity_snow(Grid.DimStruct *dims, double* density, double* nsnow, double* qsnow,
@@ -106,7 +105,6 @@ cdef class Microphysics_Arctic_1M:
         except:
             self.order = namelist['scalar_transport']['order']
 
-
         try:
             if namelist['microphysics']['phase_partitioning'] == 'liquid_only':
                 self.Lambda_fp = lambda_constant_Arctic
@@ -128,7 +126,6 @@ cdef class Microphysics_Arctic_1M:
             self.Lambda_fp = lambda_logistic
             LH.Lambda_fp = lambda_logistic
             Par.root_print('Using default logistic function as liquid fraction!')
-
         LH.L_fp = latent_heat_Arctic
 
         self.L_fp = latent_heat_Arctic
@@ -269,7 +266,6 @@ cdef class Microphysics_Arctic_1M:
 
         entropy_source_drag(&Gr.dims, &DV.values[t_shift], &PV.values[qsnow_shift], &DV.values[wqsnow_shift],
                             &PV.tendencies[s_shift])
-
 
         return
 
@@ -433,7 +429,6 @@ cdef class Microphysics_Arctic_1M:
         qrain_pencils =  z_pencil.forward_double( &Gr.dims, Pa, &PV.values[qrain_shift])
         qsnow_pencils =  z_pencil.forward_double( &Gr.dims, Pa, &PV.values[qsnow_shift])
         ql_pencils =  z_pencil.forward_double( &Gr.dims, Pa, &DV.values[ql_shift])
-
 
         # Compute liquid, ice, rain, and snow water paths
         iwp = np.empty((z_pencil.n_local_pencils), dtype=np.double, order='c')

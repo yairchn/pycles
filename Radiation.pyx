@@ -281,7 +281,7 @@ cdef class RadiationDyCOMS_RF01(RadiationBase):
             double rhoi
             double dz = Gr.dims.dx[2]
             double dzi = Gr.dims.dxi[2]
-            double[:] z = Gr.z
+            double[:] z = Gr.zp
             double[:] rho = Ref.rho0
             double[:] rho_half = Ref.rho0_half
             double cbrt_z = 0
@@ -312,7 +312,7 @@ cdef class RadiationDyCOMS_RF01(RadiationBase):
                 f_rad[pi, 0] += self.f1 * exp(-q_1)
                 for k in xrange(1, Gr.dims.n[2] + 1):
                     q_1 += self.kap * \
-                        rho_half[gw + k - 1] * ql_pencils[pi, k - 1] * dz
+                        rho_half[gw + k - 1] * ql_pencils[pi, k - 1] * Gr.dims.dzpl_half[gw+k-1]
                     f_rad[pi, k] += self.f1 * exp(-q_1)
 
                 # Compute the first term on RHS of Stevens et al. 2005
@@ -320,12 +320,12 @@ cdef class RadiationDyCOMS_RF01(RadiationBase):
                 q_0 = 0.0
                 f_rad[pi, Gr.dims.n[2]] += self.f0 * exp(-q_0)
                 for k in xrange(Gr.dims.n[2] - 1, -1, -1):
-                    q_0 += self.kap * rho_half[gw + k] * ql_pencils[pi, k] * dz
+                    q_0 += self.kap * rho_half[gw + k] * ql_pencils[pi, k] *  Gr.dims.dzpl_half[gw+k]
                     f_rad[pi, k] += self.f0 * exp(-q_0)
 
                 for k in xrange(Gr.dims.n[2]):
                     f_heat[pi, k] = - \
-                       (f_rad[pi, k + 1] - f_rad[pi, k]) * dzi / rho_half[k]
+                       (f_rad[pi, k + 1] - f_rad[pi, k]) * dzi * Gr.dims.imet_half[k] / rho_half[k]
 
         # Now transpose the flux pencils
         self.z_pencil.reverse_double(&Gr.dims, Pa, f_heat, &self.heating_rate[0])
@@ -408,7 +408,7 @@ cdef class RadiationSmoke(RadiationBase):
             double rhoi
             double dz = Gr.dims.dx[2]
             double dzi = Gr.dims.dxi[2]
-            double[:] z = Gr.z
+            double[:] z = Gr.zp
             double[:] rho = Ref.rho0
             double[:] rho_half = Ref.rho0_half
             double cbrt_z = 0
@@ -421,12 +421,12 @@ cdef class RadiationSmoke(RadiationBase):
                 q_0 = 0.0
                 f_rad[pi, Gr.dims.n[2]] = self.f0 * exp(-q_0)
                 for k in xrange(Gr.dims.n[2] - 1, -1, -1):
-                    q_0 += self.kap * rho_half[gw + k] * smoke_pencils[pi, k] * dz
+                    q_0 += self.kap * rho_half[gw + k] * smoke_pencils[pi, k] * Gr.dims.dzpl_half[gw+k]
                     f_rad[pi, k] = self.f0 * exp(-q_0)
 
                 for k in xrange(Gr.dims.n[2]):
                     f_heat[pi, k] = - \
-                       (f_rad[pi, k + 1] - f_rad[pi, k]) * dzi / rho_half[k]
+                       (f_rad[pi, k + 1] - f_rad[pi, k]) * dzi * Gr.dims.imet_half[k] / rho_half[k]
 
         # Now transpose the flux pencils
         self.z_pencil.reverse_double(&Gr.dims, Pa, f_heat, &self.heating_rate[0])
@@ -1334,7 +1334,6 @@ cdef class RadiationRRTM(RadiationBase):
                    NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):
 
         RadiationBase.stats_io(self, Gr, Ref, DV, NS, Pa)
-
 
         return
 

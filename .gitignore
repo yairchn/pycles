@@ -7,7 +7,12 @@
 parameters.pxi
 parameters_micro.pxi
 Csrc/parameters.h
+<<<<<<< HEAD
 Csrc/parameters_micro.h
+=======
+parameters_micro.pxi
+Csrc/parameters_micro.h 
+>>>>>>> 6f8f59387ec0f2fa9f9282097ecce166b72daa17
 *.idea
 *.in
 build/

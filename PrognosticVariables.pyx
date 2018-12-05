@@ -107,6 +107,7 @@ cdef class PrognosticVariables:
         cdef:
             Py_ssize_t var_shift, var_shift2
             double [:] tmp
+            double tmp_int
 
         for var_name in self.name_index.keys():
             var_shift = self.get_varshift(Gr,var_name)
@@ -138,6 +139,10 @@ cdef class PrognosticVariables:
             tmp = Pa.HorizontalMinimum(Gr,&self.values[var_shift])
             NS.write_profile(var_name + '_min',tmp[Gr.dims.gw:-Gr.dims.gw],Pa)
             NS.write_ts(var_name+'_min',np.amin(tmp[Gr.dims.gw:-Gr.dims.gw]),Pa)
+
+            #Compute global int
+            tmp_int  = Pa.domain_integral(Gr, &self.values[var_shift], &RS.rho0_half[0])
+            NS.write_ts(var_name+'_int',np.amin(tmp_int),Pa)
 
         if 'qt' in self.name_index.keys() and 's' in self.name_index.keys():
             var_shift = self.get_varshift(Gr,'qt')

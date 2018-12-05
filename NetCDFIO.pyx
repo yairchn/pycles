@@ -87,9 +87,9 @@ cdef class NetCDFIO_Stats:
         profile_grp.createDimension('z', Gr.dims.n[2])
         profile_grp.createDimension('t', None)
         z = profile_grp.createVariable('z', 'f8', ('z'))
-        z[:] = np.array(Gr.z[Gr.dims.gw:-Gr.dims.gw])
+        z[:] = np.array(Gr.zp[Gr.dims.gw:-Gr.dims.gw])
         z_half = profile_grp.createVariable('z_half', 'f8', ('z'))
-        z_half[:] = np.array(Gr.z_half[Gr.dims.gw:-Gr.dims.gw])
+        z_half[:] = np.array(Gr.zp_half[Gr.dims.gw:-Gr.dims.gw])
         profile_grp.createVariable('t', 'f8', ('t'))
 
         reference_grp = root_grp.createGroup('reference')
@@ -108,6 +108,10 @@ cdef class NetCDFIO_Stats:
         z_half.setncattr('nice_name', r'z')
 
         z_half[:] = np.array(Gr.z_half[Gr.dims.gw:-Gr.dims.gw])
+        zp = reference_grp.createVariable('zp', 'f8', ('z'))
+        zp[:] = np.array(Gr.zp[Gr.dims.gw:-Gr.dims.gw])
+        zp_half = reference_grp.createVariable('zp_half', 'f8', ('z'))
+        zp_half[:] = np.array(Gr.zp_half[Gr.dims.gw:-Gr.dims.gw])
         del z
         del z_half
 
@@ -321,6 +325,21 @@ cdef class NetCDFIO_Fields:
 
         fieldgrp.createDimension('nl', np.int(Gr.dims.npl))
         dimgrp.createDimension('d1', 1)
+
+        dimgrp.createDimension('x', np.int(Gr.dims.n[0]))
+        dimgrp.createDimension('y', np.int(Gr.dims.n[1]))
+        dimgrp.createDimension('z', np.int(Gr.dims.n[2]))
+
+
+        x = dimgrp.createVariable('x', 'f8', ('x'))
+        y = dimgrp.createVariable('y', 'f8', ('y'))
+        z = dimgrp.createVariable('z', 'f8', ('z'))
+
+
+
+        x[:] = np.array(Gr.x_half[Gr.dims.gw:-Gr.dims.gw],dtype=np.double)
+        y[:] = np.array(Gr.y_half[Gr.dims.gw:-Gr.dims.gw],dtype=np.double)
+        z[:] = np.array(Gr.zp_half[Gr.dims.gw:-Gr.dims.gw],dtype=np.double)
 
         nl_0 = dimgrp.createVariable('nl_0', 'i4', ('d1'))
         nl_1 = dimgrp.createVariable('nl_1', 'i4', ('d1'))
