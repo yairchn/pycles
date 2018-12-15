@@ -45,6 +45,8 @@ def InitializationFactory(namelist):
             return InitSmoke
         elif casename == 'Rico':
             return InitRico
+        elif casename == 'ARM_SGP':
+            return InitARM_SGP
         elif casename == 'Isdac':
             return InitIsdac
         elif casename == 'IsdacCC':
@@ -889,6 +891,78 @@ def InitRico(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
                         PV.values[e_varshift + ijk] = 0.1
 
 
+    return
+
+def InitARM_SGP(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
+                       ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa , LatentHeat LH):
+
+    reference_profiles = AdjustedMoistAdiabat(namelist, LH, Pa)
+
+    RS.Tg  = 299.0   # surface values for reference state (RS) which outputs p0 rho0 alpha0
+    RS.Pg  = 970.0*100
+    RS.qtg = 15.2/1000
+
+    # ARM_SGP inputs
+
+    z_in = np.array([0.0, 50.0,350.0, 650.0, 700.0, 1300.0, 2500.0, 5500.0 ]) #LES z is in meters
+    Theta_in = np.array([299.0, 301.5, 302.5, 303.53, 303.7, 307.13, 314.0, 343.2]) # K
+    qt_in = np.array([15.2,15.17,14.98,14.8,14.7,13.5,3.0,3.0])/1000 # qt should be in kg/kg
+    u = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')+10
+    v = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
+
+    RS.initialize(Gr ,Th, NS, Pa)
+
+
+    cdef:
+        Py_ssize_t i, j, k, ijk, ishift, jshift
+        Py_ssize_t istride = Gr.dims.nlg[1] * Gr.dims.nlg[2]
+        Py_ssize_t jstride = Gr.dims.nlg[2]
+        Py_ssize_t u_varshift = PV.get_varshift(Gr,'u')
+        Py_ssize_t v_varshift = PV.get_varshift(Gr,'v')
+        Py_ssize_t w_varshift = PV.get_varshift(Gr,'w')
+        Py_ssize_t s_varshift = PV.get_varshift(Gr,'s')
+        Py_ssize_t qt_varshift = PV.get_varshift(Gr,'qt')
+        double [:] Theta = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c') # change to temp interp to zl_hlaf (LES press is in pasc)
+        double [:] qt = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
+        #double [:] u = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
+        #double [:] v = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
+
+    Theta = np.interp(Gr.zp_half,z_in,Theta_in)
+    qt = np.interp(Gr.zp_half,z_in,qt_in)
+
+
+      #Set velocities for Galilean transformation
+    RS.u0 = 0.5 * (np.amax(u)+np.amin(u))
+    RS.v0 = 0.5 * (np.amax(v)+np.amin(v))
+
+    #Generate initial perturbations (here we are generating more than we need)
+    #random fluctuations
+    #I need to perturbed the temperature and only later calculate the entropy
+    np.random.seed(Pa.rank)
+    cdef double [:] T_pert = np.random.random_sample(Gr.dims.npg)
+    cdef double T_pert_
+    cdef double pv_star
+    cdef double qv_star
+
+    epsi = 287.1/461.5
+    # Here we fill in the 3D arrays
+    # We perform saturation adjustment on the S6 data, although this should not actually be necessary (but doesn't hurt)
+    for i in xrange(Gr.dims.nlg[0]):
+        ishift = istride * i
+        for j in xrange(Gr.dims.nlg[1]):
+            jshift = jstride * j
+            for k in xrange(Gr.dims.nlg[2]):
+                ijk = ishift + jshift + k
+                PV.values[ijk + u_varshift] = u[k] - RS.u0
+                PV.values[ijk + v_varshift] = v[k] - RS.v0
+                PV.values[ijk + w_varshift] = 0.0
+                PV.values[ijk + qt_varshift]  = qt[k]
+                T  = Theta[k]*exner_c(RS.p0_half[k])
+                if Gr.zp_half[k] < 200.0: # perturbation temp on the lower 200 m and decrease linearly from 0 to 200m
+                    T_pert_ = T_pert[ijk]*(1 - Gr.zp_half[k]/200)* 0.1
+                    PV.values[ijk + s_varshift] = Th.entropy(RS.p0_half[k], T + T_pert_, qt[k], 0.0, 0.0)
+                else:
+                    PV.values[ijk + s_varshift] = Th.entropy(RS.p0_half[k], T , qt[k], 0.0, 0.0)
     return
 
 
