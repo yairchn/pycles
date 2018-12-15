@@ -499,7 +499,6 @@ class TKEStatistics:
             double [:] tke_S = np.zeros(Gr.dims.nlg[2], dtype=np.double, order='c')
             double [:] tke_P = np.zeros(Gr.dims.nlg[2], dtype=np.double, order='c')
             double [:] tke_T = np.zeros(Gr.dims.nlg[2], dtype=np.double, order='c')
-        print '---------------------------------------', np.shape(e_dis)
         #Interpolate to cell centers
         with nogil:
             for i in xrange(1, Gr.dims.nlg[0]):
@@ -607,46 +606,26 @@ class TKEStatistics:
                         ijk = ishift + jshift + k
                         e_adv[ijk] -= ucmean[k] * (tke_nd[ijk+istride] - tke_nd[ijk-istride])*0.5*Gr.dims.dxi[0]
                         e_adv[ijk] -= vcmean[k] * (tke_nd[ijk+jstride] - tke_nd[ijk-jstride])*0.5*Gr.dims.dxi[1]
-
         cdef:
             double [:] tke_A = Pa.HorizontalMean(Gr, &e_adv[0])
             double nu
 
         #Compute the dissipation of TKE
+
         with nogil:
             for i in xrange(1, Gr.dims.nlg[0]):
                 ishift = i * istride
                 for j in xrange(1, Gr.dims.nlg[1]):
                     jshift = j * jstride
                     for k in xrange(1, Gr.dims.nlg[2]):
-                        ijk = ishift + jshift + k
-                        with gil:
-                            if ijk > 49570:
-                                print i, j, k, visc_shift, ijk, Gr.dims.nlg[0], Gr.dims.nlg[1] ,Gr.dims.nlg[2]
-                            print '626 - -------------------------', np.size(up)- ijk - istride
+                            ijk = ishift + jshift + k
                             nu = DV.values[visc_shift + ijk]
-                            print '628', np.shape(e_dis)
-                            print up[ijk + istride]
-                            print '630'
-                            print up[ijk-istride]
-                            print '632'
-                            print Gr.dims.dxi[0]
-                            print '634'
-                            print up[ijk + istride]
-                            print '636'
-                            print up[ijk-istride]
-                            print '638'
-                            print Gr.dims.dxi[0]
-                            print 'worked'
                             e_dis[ijk] += (up[ijk + istride] - up[ijk-istride]) * 0.5 * Gr.dims.dxi[0] * (up[ijk + istride] - up[ijk-istride]) * 0.5 * Gr.dims.dxi[0]
-                            print '630'
                             e_dis[ijk] += (vp[ijk + jstride] - vp[ijk-jstride]) * 0.5 * Gr.dims.dxi[1] * (vp[ijk + jstride] - vp[ijk-jstride]) * 0.5 * Gr.dims.dxi[1]
-                            print '632'
                             e_dis[ijk] += (wp[ijk + 1] - wp[ijk-1]) * 0.5 * Gr.dims.dxi[2] * (wp[ijk + 1] - wp[ijk-1]) * 0.5 * Gr.dims.dxi[2]
-                            print '634'
                             e_dis[ijk] *= nu
-                            print '636'
-        print 628
+
+
         cdef:
             double [:] tke_D = Pa.HorizontalMean(Gr, &e_dis[0])
 
@@ -661,7 +640,6 @@ class TKEStatistics:
         NS.write_profile('tke_prod_T', tke_T[Gr.dims.gw:-Gr.dims.gw], Pa)
         NS.write_profile('tke_prod_A', tke_A[Gr.dims.gw:-Gr.dims.gw], Pa)
         NS.write_profile('tke_prod_D', tke_D[Gr.dims.gw:-Gr.dims.gw], Pa)
-        print 643
         return
 
 
