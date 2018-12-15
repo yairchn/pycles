@@ -499,6 +499,7 @@ class TKEStatistics:
             double [:] tke_S = np.zeros(Gr.dims.nlg[2], dtype=np.double, order='c')
             double [:] tke_P = np.zeros(Gr.dims.nlg[2], dtype=np.double, order='c')
             double [:] tke_T = np.zeros(Gr.dims.nlg[2], dtype=np.double, order='c')
+
         #Interpolate to cell centers
         with nogil:
             for i in xrange(1, Gr.dims.nlg[0]):
@@ -606,12 +607,12 @@ class TKEStatistics:
                         ijk = ishift + jshift + k
                         e_adv[ijk] -= ucmean[k] * (tke_nd[ijk+istride] - tke_nd[ijk-istride])*0.5*Gr.dims.dxi[0]
                         e_adv[ijk] -= vcmean[k] * (tke_nd[ijk+jstride] - tke_nd[ijk-jstride])*0.5*Gr.dims.dxi[1]
+
         cdef:
             double [:] tke_A = Pa.HorizontalMean(Gr, &e_adv[0])
             double nu
 
         #Compute the dissipation of TKE
-
         with nogil:
             for i in xrange(1, Gr.dims.nlg[0]):
                 ishift = i * istride
@@ -624,7 +625,6 @@ class TKEStatistics:
                         e_dis[ijk] += (vp[ijk + jstride] - vp[ijk-jstride]) * 0.5 * Gr.dims.dxi[1] * (vp[ijk + jstride] - vp[ijk-jstride]) * 0.5 * Gr.dims.dxi[1]
                         e_dis[ijk] += (wp[ijk + 1] - wp[ijk-1]) * 0.5 * Gr.dims.dxi[2] * (wp[ijk + 1] - wp[ijk-1]) * 0.5 * Gr.dims.dxi[2]
                         e_dis[ijk] *= nu
-
 
         cdef:
             double [:] tke_D = Pa.HorizontalMean(Gr, &e_dis[0])
@@ -640,6 +640,7 @@ class TKEStatistics:
         NS.write_profile('tke_prod_T', tke_T[Gr.dims.gw:-Gr.dims.gw], Pa)
         NS.write_profile('tke_prod_A', tke_A[Gr.dims.gw:-Gr.dims.gw], Pa)
         NS.write_profile('tke_prod_D', tke_D[Gr.dims.gw:-Gr.dims.gw], Pa)
+
         return
 
 

@@ -735,6 +735,7 @@ void entropy_source_heating_rain(const struct DimStruct *dims, double* restrict 
     const ssize_t jmax = dims->nlg[1]-dims->gw;
     const ssize_t kmax = dims->nlg[2]-dims->gw;
     const double dzi = 1.0/dims->dx[2];
+    const double * imetl_half = dims-> imetl_half;
 
 
     for(ssize_t i=imin; i<imax; i++){
@@ -747,11 +748,11 @@ void entropy_source_heating_rain(const struct DimStruct *dims, double* restrict 
                 const double w_adv = w_qrain[ijk] - w[ijk]; 
                 
                 if (w_adv < 0.0){
-                    entropy_tendency[ijk] += qrain[ijk]*fabs(w_adv) * cl * (Twet[ijk+1] - Twet[ijk])* dzi/temperature[ijk];
+                    entropy_tendency[ijk] += qrain[ijk]*fabs(w_adv) * cl * (Twet[ijk+1] - Twet[ijk])* dzi* imetl_half[k]/temperature[ijk];
                 }
                 else
                 {
-                    entropy_tendency[ijk] += qrain[ijk]*(w_adv) * cl * (Twet[ijk] - Twet[ijk-1])* dzi/temperature[ijk];
+                    entropy_tendency[ijk] += qrain[ijk]*(w_adv) * cl * (Twet[ijk] - Twet[ijk-1])* dzi* imetl_half[k]/temperature[ijk];
                 }
 
             }
@@ -778,6 +779,8 @@ void entropy_source_heating_snow(const struct DimStruct *dims, double* restrict 
     const ssize_t kmax = dims->nlg[2]-dims->gw;
     const double dzi = 1.0/dims->dx[2];
 
+    const double * imetl_half = dims-> imetl_half;
+
 
 
     for(ssize_t i=imin; i<imax; i++){
@@ -789,10 +792,10 @@ void entropy_source_heating_snow(const struct DimStruct *dims, double* restrict 
 
                 const double w_adv = w_qsnow[ijk] - w[ijk];
                 if (w_adv < 0.0){
-                    entropy_tendency[ijk]+= qsnow[ijk]*fabs(w_adv) * ci * (Twet[ijk+1] - Twet[ijk])* dzi/temperature[ijk];
+                    entropy_tendency[ijk]+= qsnow[ijk]*fabs(w_adv) * ci * (Twet[ijk+1] - Twet[ijk])* dzi* imetl_half[k]/temperature[ijk];
                 }
                 else{
-                    entropy_tendency[ijk]+= qsnow[ijk]*(w_adv) * ci * (Twet[ijk] - Twet[ijk-1])* dzi/temperature[ijk];
+                    entropy_tendency[ijk]+= qsnow[ijk]*(w_adv) * ci * (Twet[ijk] - Twet[ijk-1])* dzi* imetl_half[k]/temperature[ijk];
                 }
             }
         }
