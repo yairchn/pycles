@@ -25,6 +25,7 @@ include 'parameters.pxi'
 from Initialization import sat_adjst, qv_unsat
 # import matplotlib.pyplot as plt
 import cPickle
+cimport TimeStepping
 
 cdef class Forcing:
     def __init__(self, namelist, LatentHeat LH, ParallelMPI.ParallelMPI Pa):
@@ -44,6 +45,8 @@ cdef class Forcing:
             self.scheme = ForcingNone()
         elif casename == 'Rico':
             self.scheme = ForcingRico()
+        elif casename == 'ARM_SGP':
+            self.scheme = ForcingARM_SGP()
         elif casename == 'StableBubble':
             self.scheme = ForcingNone()
         elif casename == 'SaturatedBubble': 
@@ -71,8 +74,9 @@ cdef class Forcing:
         return
 
     cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState RS,
-                 PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV, ParallelMPI.ParallelMPI Pa):
-        self.scheme.update(Gr, RS, PV, DV, Pa)
+                 PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV,  ParallelMPI.ParallelMPI Pa,
+                 TimeStepping.TimeStepping TS):
+        self.scheme.update(Gr, RS, PV, DV, Pa, TS)
         return
 
     cpdef stats_io(self, Grid.Grid Gr, ReferenceState.ReferenceState RS,
@@ -91,7 +95,8 @@ cdef class ForcingNone:
         return
 
     cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState RS,
-                 PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV, ParallelMPI.ParallelMPI Pa):
+                 PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV,  ParallelMPI.ParallelMPI Pa,
+                 TimeStepping.TimeStepping TS):
         return
 
     cpdef stats_io(self, Grid.Grid Gr, ReferenceState.ReferenceState RS,
@@ -152,7 +157,8 @@ cdef class ForcingBomex:
 
 
     cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState RS,
-                 PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV, ParallelMPI.ParallelMPI Pa):
+                 PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV,  ParallelMPI.ParallelMPI Pa,
+                 TimeStepping.TimeStepping TS):
 
         cdef:
             Py_ssize_t imin = Gr.dims.gw
@@ -267,7 +273,8 @@ cdef class ForcingSullivanPatton:
         return
 
     cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState RS,
-                 PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV, ParallelMPI.ParallelMPI Pa):
+                 PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV,  ParallelMPI.ParallelMPI Pa,
+                 TimeStepping.TimeStepping TS):
         cdef:
             Py_ssize_t u_shift = PV.get_varshift(Gr, 'u')
             Py_ssize_t v_shift = PV.get_varshift(Gr, 'v')
@@ -311,7 +318,8 @@ cdef class ForcingGabls:
         NS.add_profile('v_coriolis_tendency',Gr, Pa)
 
     cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState RS,
-                 PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV, ParallelMPI.ParallelMPI Pa):
+                 PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV,  ParallelMPI.ParallelMPI Pa,
+                 TimeStepping.TimeStepping TS):
         cdef:
             Py_ssize_t u_shift = PV.get_varshift(Gr, 'u')
             Py_ssize_t v_shift = PV.get_varshift(Gr, 'v')
@@ -389,7 +397,8 @@ cdef class ForcingDyCOMS_RF01:
 
 
     cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState RS,
-                 PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV, ParallelMPI.ParallelMPI Pa):
+                 PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV,  ParallelMPI.ParallelMPI Pa,
+                 TimeStepping.TimeStepping TS):
         cdef:
             Py_ssize_t u_shift = PV.get_varshift(Gr, 'u')
             Py_ssize_t v_shift = PV.get_varshift(Gr, 'v')
@@ -502,7 +511,8 @@ cdef class ForcingRico:
         return
 
     cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState RS,
-                 PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV, ParallelMPI.ParallelMPI Pa):
+                 PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV,  ParallelMPI.ParallelMPI Pa,
+                 TimeStepping.TimeStepping TS):
 
         cdef:
             Py_ssize_t imin = Gr.dims.gw
@@ -553,6 +563,136 @@ cdef class ForcingRico:
     cpdef stats_io(self, Grid.Grid Gr, ReferenceState.ReferenceState RS,
                  PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV,
                  NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):
+
+        return
+
+cdef class ForcingARM_SGP:
+    def __init__(self):
+
+        self.tau_inverse = 1.0/(60.0*60.0)
+        latitude = 18.0
+        #self.momentum_subsidence = 0
+        self.coriolis_param = 8.5e-5
+        return
+
+    cpdef initialize(self, Grid.Grid Gr, ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):
+
+
+        self.ug = np.ones(Gr.dims.nlg[2],dtype=np.double,order='c')*10.0 # np.zeros(Gr.dims.nlg[2]) + 10.0
+        self.vg = np.zeros(Gr.dims.nlg[2],dtype=np.double,order='c')  # np.zeros(Gr.dims.nlg[2])
+        self.dtdt = np.zeros(Gr.dims.nlg[2],dtype=np.double,order='c')  # theta
+        self.dqtdt = np.zeros(Gr.dims.nlg[2],dtype=np.double,order='c')
+        for k in range(0,Gr.dims.nlg[2]):
+            if Gr.z_half[k] <= 200:
+                self.dqtdt[k] = 0.08
+                self.dtdt[k] = 0.0 - 0.125
+
+        NS.add_profile('s_subsidence_tendency', Gr, Pa)
+        NS.add_profile('qt_subsidence_tendency', Gr, Pa)
+        NS.add_profile('u_coriolis_tendency', Gr, Pa)
+        NS.add_profile('v_coriolis_tendency',Gr, Pa)
+
+        return
+
+
+    cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState RS,
+                 PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV,  ParallelMPI.ParallelMPI Pa,
+                 TimeStepping.TimeStepping TS):
+
+        t_in = np.array([0.0, 3.0, 6.0, 9.0, 12.0, 14.5]) * 3600.0 #LES time is in sec
+        AT_in = np.array([0.0, 0.0, 0.0, -0.08, -0.016, -0.016])/3600.0  # Advective forcing for theta [K/h] converted to [K/sec]
+        RT_in = np.array([-0.125, 0.0, 0.0, 0.0, 0.0, -0.1])/3600.0  # Radiative forcing for theta [K/h] converted to [K/sec]
+        Rqt_in = np.array([0.08, 0.02, -0.04, -0.1, -0.16, -0.3])/1000.0/3600.0  # Radiative forcing for qt converted to [kg/kg/h]
+
+        cdef:
+            Py_ssize_t imin = Gr.dims.gw
+            Py_ssize_t jmin = Gr.dims.gw
+            Py_ssize_t kmin = Gr.dims.gw
+            Py_ssize_t imax = Gr.dims.nlg[0] - Gr.dims.gw
+            Py_ssize_t jmax = Gr.dims.nlg[1] - Gr.dims.gw
+            Py_ssize_t kmax = Gr.dims.nlg[2] - Gr.dims.gw
+            Py_ssize_t istride = Gr.dims.nlg[1] * Gr.dims.nlg[2]
+            Py_ssize_t jstride = Gr.dims.nlg[2]
+            Py_ssize_t i,j,k,ishift,jshift,ijk
+            Py_ssize_t u_shift = PV.get_varshift(Gr, 'u')
+            Py_ssize_t v_shift = PV.get_varshift(Gr, 'v')
+            Py_ssize_t s_shift = PV.get_varshift(Gr, 's')
+            Py_ssize_t qt_shift = PV.get_varshift(Gr, 'qt')
+            Py_ssize_t t_shift = DV.get_varshift(Gr, 'temperature')
+            Py_ssize_t ql_shift = DV.get_varshift(Gr,'ql')
+            double qt, qv, p0, t
+
+            double [:] umean = Pa.HorizontalMean(Gr, &PV.values[u_shift])
+            double [:] vmean = Pa.HorizontalMean(Gr, &PV.values[v_shift])
+
+        #Apply large scale source terms
+        #with nogil:
+         #   for i in xrange(imin,imax):
+         #       ishift = i * istride
+         #       for j in xrange(jmin,jmax):
+         #           jshift = j * jstride
+         #           for k in xrange(kmin,kmax):
+         #               ijk = ishift + jshift + k
+         #               p0 = RS.p0_half[k]
+         #               PV.tendencies[u_shift  + ijk] +=  self.source_u_nudge[k]
+         #              PV.tendencies[v_shift  + ijk] +=  self.source_v_nudge[k]
+
+        if TS.rk_step == 0:
+            dqtdt = np.interp(TS.t,t_in,Rqt_in)
+            dtdt_a = np.interp(TS.t,t_in,AT_in)
+            dtdt_r = np.interp(TS.t,t_in,RT_in)
+            for k in range(0,Gr.dims.nlg[2]):
+                if Gr.z_half[k] <=1000:
+                    self.dqtdt[k] = dqtdt
+                    self.dtdt[k]  = (dtdt_a + dtdt_r) * exner_c(RS.p0_half[k])
+                elif Gr.z_half[k] > 1000  and Gr.z_half[k] <= 2000:
+                    self.dqtdt[k] =   dqtdt*(1-(Gr.z_half[k]-1000)/1000)
+                    self.dtdt[k]  = (dtdt_a + dtdt_r) * exner_c(RS.p0_half[k])*(1-(Gr.z_half[k]-1000)/1000)
+         # Now update entropy tendenci
+        with nogil:
+            for i in xrange(imin, imax):
+                ishift = i * istride
+                for j in xrange(jmin, jmax):
+                    jshift = j * jstride
+                    for k in xrange(kmin, kmax):
+                        ijk = ishift + jshift + k
+                        p0 = RS.p0_half[k]
+                        qt = PV.values[qt_shift + ijk]
+                        qv = qt - DV.values[ql_shift + ijk]
+                        t  = DV.values[t_shift + ijk]
+                        PV.tendencies[s_shift + ijk] += s_tendency_c(p0, qt, qv, t, self.dqtdt[k], self.dtdt[k])
+                        PV.tendencies[qt_shift + ijk] += self.dqtdt[k]
+
+        #Apply Coriolis Forcing
+
+        coriolis_force(&Gr.dims,&PV.values[u_shift],&PV.values[v_shift],&PV.tendencies[u_shift],
+                       &PV.tendencies[v_shift],&self.ug[0], &self.vg[0],self.coriolis_param, RS.u0, RS.v0  )
+
+        return
+
+    cpdef stats_io(self, Grid.Grid Gr, ReferenceState.ReferenceState RS,
+                 PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV,
+                 NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):
+
+        cdef:
+            Py_ssize_t u_shift = PV.get_varshift(Gr, 'u')
+            Py_ssize_t v_shift = PV.get_varshift(Gr, 'v')
+            Py_ssize_t s_shift = PV.get_varshift(Gr, 's')
+            Py_ssize_t qt_shift = PV.get_varshift(Gr, 'qt')
+            double [:] tmp_tendency  = np.zeros((Gr.dims.npg),dtype=np.double,order='c')
+            double [:] tmp_tendency_2 = np.zeros((Gr.dims.npg),dtype=np.double,order='c')
+            double [:] mean_tendency = np.empty((Gr.dims.nlg[2],),dtype=np.double,order='c')
+            double [:] mean_tendency_2 = np.zeros((Gr.dims.nlg[2]),dtype=np.double,order='c')
+            double [:] umean = Pa.HorizontalMean(Gr, &PV.values[u_shift])
+            double [:] vmean = Pa.HorizontalMean(Gr, &PV.values[v_shift])
+
+        coriolis_force(&Gr.dims,&PV.values[u_shift],&PV.values[v_shift],&tmp_tendency[0],
+                       &tmp_tendency_2[0],&self.ug[0], &self.vg[0],self.coriolis_param, RS.u0, RS.v0  )
+
+        mean_tendency = Pa.HorizontalMean(Gr,&tmp_tendency[0])
+        mean_tendency_2 = Pa.HorizontalMean(Gr,&tmp_tendency_2[0])
+        NS.write_profile('u_coriolis_tendency',mean_tendency[Gr.dims.gw:-Gr.dims.gw],Pa)
+        NS.write_profile('v_coriolis_tendency',mean_tendency_2[Gr.dims.gw:-Gr.dims.gw],Pa)
 
         return
 
@@ -647,7 +787,8 @@ cdef class ForcingIsdac:
         return
 
     cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState RS,
-                 PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV, ParallelMPI.ParallelMPI Pa):
+                 PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV,  ParallelMPI.ParallelMPI Pa,
+                 TimeStepping.TimeStepping TS):
         cdef:
             Py_ssize_t u_shift = PV.get_varshift(Gr, 'u')
             Py_ssize_t v_shift = PV.get_varshift(Gr, 'v')
@@ -870,7 +1011,8 @@ cdef class ForcingIsdacCC:
         return
 
     cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState RS,
-                 PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV, ParallelMPI.ParallelMPI Pa):
+                 PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV,  ParallelMPI.ParallelMPI Pa,
+                 TimeStepping.TimeStepping TS):
         cdef:
             Py_ssize_t u_shift = PV.get_varshift(Gr, 'u')
             Py_ssize_t v_shift = PV.get_varshift(Gr, 'v')
@@ -987,7 +1129,8 @@ cdef class ForcingMpace:
         return
 
     cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState RS,
-                 PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV, ParallelMPI.ParallelMPI Pa):
+                 PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV,  ParallelMPI.ParallelMPI Pa,
+                 TimeStepping.TimeStepping TS):
 
         cdef:
             Py_ssize_t imin = Gr.dims.gw
@@ -1156,7 +1299,8 @@ cdef class ForcingSheba:
 
     @cython.wraparound(False)
     cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState RS,
-                 PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV, ParallelMPI.ParallelMPI Pa):
+                 PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV,  ParallelMPI.ParallelMPI Pa,
+                 TimeStepping.TimeStepping TS):
 
 
         cdef:
@@ -1485,7 +1629,8 @@ cdef class ForcingCGILS:
 
 
     cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState RS,
-                 PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV, ParallelMPI.ParallelMPI Pa):
+                 PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV,  ParallelMPI.ParallelMPI Pa,
+                 TimeStepping.TimeStepping TS):
 
         cdef:
             Py_ssize_t imin = Gr.dims.gw
@@ -1728,7 +1873,8 @@ cdef class ForcingZGILS:
 
 
     cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState RS,
-                 PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV, ParallelMPI.ParallelMPI Pa):
+                 PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV,  ParallelMPI.ParallelMPI Pa,
+                 TimeStepping.TimeStepping TS):
 
         cdef:
             Py_ssize_t gw = Gr.dims.gw
