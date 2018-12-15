@@ -927,8 +927,8 @@ def InitARM_SGP(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables P
         #double [:] u = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
         #double [:] v = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
 
-    Theta = np.interp(Gr.zp_half,z_in,Theta_in)
-    qt = np.interp(Gr.zp_half,z_in,qt_in)
+    Theta = np.interp(Gr.z_half,z_in,Theta_in)
+    qt = np.interp(Gr.z_half,z_in,qt_in)
 
 
       #Set velocities for Galilean transformation
@@ -958,8 +958,8 @@ def InitARM_SGP(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables P
                 PV.values[ijk + w_varshift] = 0.0
                 PV.values[ijk + qt_varshift]  = qt[k]
                 T  = Theta[k]*exner_c(RS.p0_half[k])
-                if Gr.zp_half[k] < 200.0: # perturbation temp on the lower 200 m and decrease linearly from 0 to 200m
-                    T_pert_ = T_pert[ijk]*(1 - Gr.zp_half[k]/200)* 0.1
+                if Gr.z_half[k] < 200.0: # perturbation temp on the lower 200 m and decrease linearly from 0 to 200m
+                    T_pert_ = T_pert[ijk]*(1 - Gr.z_half[k]/200)* 0.1
                     PV.values[ijk + s_varshift] = Th.entropy(RS.p0_half[k], T + T_pert_, qt[k], 0.0, 0.0)
                 else:
                     PV.values[ijk + s_varshift] = Th.entropy(RS.p0_half[k], T , qt[k], 0.0, 0.0)
