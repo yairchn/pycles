@@ -58,6 +58,8 @@ def SurfaceFactory(namelist, LatentHeat LH, ParallelMPI.ParallelMPI Par):
             return SurfaceDYCOMS_RF02(namelist, LH)
         elif casename == 'Rico':
             return SurfaceRico(LH)
+        elif casename == 'ARM_SGP':
+            return SurfaceARM_SGP(namelist, LH, Par)
         elif casename == 'Isdac':
             return SurfaceIsdac(namelist, LH)
         elif casename == 'IsdacCC':
@@ -744,6 +746,91 @@ cdef class SurfaceRico(SurfaceBase):
         return
 
 
+cdef class SurfaceARM_SGP(SurfaceBase):
+    def __init__(self, namelist, LatentHeat LH, ParallelMPI.ParallelMPI Pa):
+
+
+        self.L_fp = LH.L_fp # is this related ?
+        self.Lambda_fp = LH.Lambda_fp # is this related ?
+
+        self.dry_case = False
+
+    cpdef initialize(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):
+        SurfaceBase.initialize(self,Gr,Ref,NS,Pa)
+        self.windspeed = np.zeros(Gr.dims.nlg[0]*Gr.dims.nlg[1], dtype=np.double, order='c')
+        self.T_surface = 299.0
+        self.ft  = -30.0 # W/m^2
+        self.fq  = 5.0 # W/m^2
+
+        return
+
+
+    cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState Ref, PrognosticVariables.PrognosticVariables PV,
+                 DiagnosticVariables.DiagnosticVariables DV,ParallelMPI.ParallelMPI Pa, TimeStepping.TimeStepping TS):
+
+        if Pa.sub_z_rank != 0:
+            return
+        cdef:
+            Py_ssize_t u_shift = PV.get_varshift(Gr, 'u')
+            Py_ssize_t v_shift = PV.get_varshift(Gr, 'v')
+            Py_ssize_t s_shift = PV.get_varshift(Gr, 's')
+            Py_ssize_t qt_shift = PV.get_varshift(Gr, 'qt')
+            Py_ssize_t t_shift = DV.get_varshift(Gr, 'temperature')
+            Py_ssize_t ql_shift = DV.get_varshift(Gr, 'ql')
+        #cdef double[:]
+        #F_pert = np.random.random_sample(Gr.dims.npg)
+        cdef:
+            double th_flux
+            double [:] SH = np.zeros(5580,dtype=np.double,order='c') # simulation time / dt
+            double [:] LH = np.zeros(5580,dtype=np.double,order='c')
+        # update fluxes start from the second
+        t_in = np.array([0.0, 4.0, 6.5, 7.5, 10.0, 12.5, 14.5]) * 3600 #LES time is in sec
+        SH = np.array([-30.0, 90.0, 140.0, 140.0, 100.0, -10, -10]) # W/m^2
+        LH = np.array([5.0, 250.0, 450.0, 500.0, 420.0, 180.0, 0.0]) # W/m^2
+        if TS.rk_step == 0:
+
+            self.ft = np.interp(TS.t,t_in,SH)
+            self.fq = np.interp(TS.t,t_in,LH)
+
+        cdef double EX = exner_c(Ref.Pg)
+            #th_flux = self.ft#/Ref.rho0[Gr.dims.gw-1]/cpd/EX
+        cdef:
+            Py_ssize_t i,j, ijk, ij
+            Py_ssize_t gw = Gr.dims.gw
+            Py_ssize_t imax = Gr.dims.nlg[0]
+            Py_ssize_t jmax = Gr.dims.nlg[1]
+            Py_ssize_t istride = Gr.dims.nlg[1] * Gr.dims.nlg[2]
+            Py_ssize_t jstride = Gr.dims.nlg[2]
+            Py_ssize_t istride_2d = Gr.dims.nlg[1]
+
+            double lam, lv, pv, pd, sv, sd
+
+
+
+        with nogil:
+            for i in xrange(gw-1, imax-gw+1):
+                for j in xrange(gw-1, jmax-gw+1):
+                    ijk = i * istride + j * jstride + gw
+                    ij = i * istride_2d + j
+                    self.friction_velocity[ij] = 0
+                    lam = self.Lambda_fp(DV.values[t_shift+ijk])
+                    lv = self.L_fp(DV.values[t_shift+ijk],lam)
+                    pv = pv_c(Ref.p0_half[gw], PV.values[ijk + qt_shift], PV.values[ijk + qt_shift] - DV.values[ijk + ql_shift])
+                    pd = pd_c(Ref.p0_half[gw], PV.values[ijk + qt_shift], PV.values[ijk + qt_shift] - DV.values[ijk + ql_shift])
+                    sv = sv_c(pv,DV.values[t_shift+ijk])
+                    sd = sd_c(pd,DV.values[t_shift+ijk])
+                    th_flux = self.ft/Ref.rho0[Gr.dims.gw-1]/cpd/EX
+                    self.qt_flux[ij] = self.fq/lv/Ref.rho0[Gr.dims.gw-1]
+                    self.s_flux[ij] = entropyflux_from_thetaflux_qtflux(th_flux, self.qt_flux[ij],
+                                                                     Ref.p0_half[gw], DV.values[t_shift + ijk],
+                                                                     PV.values[qt_shift + ijk], PV.values[qt_shift + ijk])
+        SurfaceBase.update(self, Gr, Ref, PV, DV, Pa,TS)
+        return
+
+    cpdef stats_io(self, Grid.Grid Gr, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):
+        SurfaceBase.stats_io(self, Gr, NS, Pa)
+
+        return
 
 cdef class SurfaceCGILS(SurfaceBase):
     def __init__(self, namelist, LatentHeat LH, ParallelMPI.ParallelMPI Pa):
