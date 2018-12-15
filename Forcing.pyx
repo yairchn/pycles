@@ -566,11 +566,11 @@ cdef class ForcingRico:
 
         return
 
-cdef class ForcingARM_SGP: # YAIR - check if indeed you wanna duplicate DyCOMS_RF01 in this case - we are not nudging t and qt
-    def __init__(self, namelist):
+cdef class ForcingARM_SGP:
+    def __init__(self):
 
-        self.tau_inverse = 1.0/(60.0*60.0) # inverse of  max nudging timescale, 1 hr, for all cases
-        latitude = 18.0 # degrees
+        self.tau_inverse = 1.0/(60.0*60.0)
+        latitude = 18.0
         #self.momentum_subsidence = 0
         self.coriolis_param = 8.5e-5
         return
