@@ -217,7 +217,7 @@ class Simulation3d:
                 self.FieldsIO.update(self.Gr, self.PV, self.DV, self.TS, self.Pa)
                 self.FieldsIO.dump_prognostic_variables(self.Gr, self.PV)
                 self.FieldsIO.dump_diagnostic_variables(self.Gr, self.DV, self.Pa)
-                self.Pa.root_print('Finished Doing 3D FieldIO 221')
+                self.Pa.root_print('Finished Doing 3D FieldIO')
 
             # If time to ouput stats do output
             if self.StatsIO.last_output_time + self.StatsIO.frequency == self.TS.t:
@@ -242,7 +242,7 @@ class Simulation3d:
                 self.Budg.stats_io(self.Sur, self.StatsIO, self.Pa)
                 self.Aux.stats_io(self.Gr, self.Ref, self.PV, self.DV, self.MA, self.MD, self.StatsIO, self.Pa)
                 self.StatsIO.close_files(self.Pa)
-                self.Pa.root_print('Finished Doing StatsIO 249')
+                self.Pa.root_print('Finished Doing StatsIO')
 
             # If time to ouput stats do output
             if self.CondStatsIO.last_output_time + self.CondStatsIO.frequency == self.TS.t:
@@ -290,7 +290,7 @@ class Simulation3d:
         self.FieldsIO.update(self.Gr, self.PV, self.DV, self.TS, self.Pa)
         self.FieldsIO.dump_prognostic_variables(self.Gr, self.PV)
         self.FieldsIO.dump_diagnostic_variables(self.Gr, self.DV, self.Pa)
-        self.Pa.root_print('Finished Doing 3D FieldIO 298')
+        self.Pa.root_print('Finished Doing 3D FieldIO')
 
         self.StatsIO.open_files(self.Pa)
         self.StatsIO.write_simulation_time(self.TS.t, self.Pa)
