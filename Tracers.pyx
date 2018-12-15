@@ -94,6 +94,7 @@ cdef class UpdraftTracers:
             self.tracer_dict['lcl']['c_lcl_15']['timescale'] = 15.0 * 60.0
 
         for var in self.tracer_dict['surface'].keys():
+
            PV.add_variable(var, '-', var, 'tracer diagnostics' , "sym", "scalar", Pa)
 
         if self.lcl_tracers:
@@ -350,8 +351,6 @@ cdef class UpdraftTracers:
                             for k in xrange( Gr.dims.nlg[2]):
                                 ijk = i * istride + j * jstride + k
                                 PV.values[var_shift + ijk] = fmax(PV.values[var_shift + ijk],0.0)
-
-
         return
 
 

@@ -393,6 +393,7 @@ def Bomex():
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = True
     namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['use_lcl_tracers'] = False
 
     return namelist
 

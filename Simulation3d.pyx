@@ -65,7 +65,6 @@ class Simulation3d:
         self.Damping = Damping.Damping(namelist, self.Pa)
         self.TS = TimeStepping.TimeStepping()
         self.Tr = TracersFactory(namelist)
-
         # Add new prognostic variables
         self.PV.add_variable('u', 'm/s', 'u', 'u velocity component',"sym", "velocity", self.Pa)
         self.PV.set_velocity_direction('u', 0, self.Pa)
@@ -165,10 +164,8 @@ class Simulation3d:
                 self.Sur.update(self.Gr, self.Ref,self.PV, self.DV,self.Pa,self.TS)
                 self.SGS.update(self.Gr,self.DV,self.PV, self.Ke, self.Sur,self.Pa)
                 self.Damping.update(self.Gr, self.Ref,self.PV, self.DV, self.Pa)
-
                 self.SD.update(self.Gr,self.Ref,self.PV,self.DV)
                 self.MD.update(self.Gr,self.Ref,self.PV,self.DV,self.Ke)
-
                 self.Fo.update(self.Gr, self.Ref, self.PV, self.DV, self.Pa)
                 self.Ra.update(self.Gr, self.Ref, self.PV, self.DV, self.Sur, self.TS, self.Pa)
                 self.Budg.update(self.Gr,self.Ra, self.Sur, self.TS, self.Pa)
@@ -246,6 +243,7 @@ class Simulation3d:
                 self.Tr.stats_io(self.Gr, self.PV, self.DV, self.TS, self.StatsIO, self.Pa)
                 self.Ra.stats_io(self.Gr, self.Ref, self.DV, self.StatsIO, self.Pa)
                 self.Budg.stats_io(self.Sur, self.StatsIO, self.Pa)
+
                 self.Aux.stats_io(self.Gr, self.Ref, self.PV, self.DV, self.MA, self.MD, self.StatsIO, self.Pa)
                 self.StatsIO.close_files(self.Pa)
                 self.Pa.root_print('Finished Doing StatsIO')
@@ -319,6 +317,7 @@ class Simulation3d:
         self.Tr.stats_io(self.Gr, self.PV, self.DV, self.TS, self.StatsIO, self.Pa)
         self.Ra.stats_io(self.Gr, self.Ref, self.DV, self.StatsIO, self.Pa)
         self.Budg.stats_io(self.Sur, self.StatsIO, self.Pa)
+
         self.Aux.stats_io(self.Gr, self.Ref, self.PV, self.DV, self.MA, self.MD, self.StatsIO, self.Pa)
         self.StatsIO.close_files(self.Pa)
         return
