@@ -75,7 +75,6 @@ class Simulation3d:
 
         AuxillaryVariables(namelist, self.PV, self.DV, self.Pa)
 
-
         self.StatsIO.initialize(namelist, self.Gr, self.Pa)
         self.FieldsIO.initialize(namelist, self.Pa)
         self.CondStatsIO.initialize(namelist, self.Gr, self.Pa)
@@ -218,36 +217,54 @@ class Simulation3d:
                 self.FieldsIO.update(self.Gr, self.PV, self.DV, self.TS, self.Pa)
                 self.FieldsIO.dump_prognostic_variables(self.Gr, self.PV)
                 self.FieldsIO.dump_diagnostic_variables(self.Gr, self.DV, self.Pa)
-                self.Pa.root_print('Finished Doing 3D FieldIO')
+                self.Pa.root_print('Finished Doing 3D FieldIO 221')
 
             # If time to ouput stats do output
             if self.StatsIO.last_output_time + self.StatsIO.frequency == self.TS.t:
                 self.Pa.root_print('Doing StatsIO')
+                print 226
                 self.StatsIO.last_output_time = self.TS.t
+                print 228
                 self.StatsIO.open_files(self.Pa)
+                print 230
                 self.StatsIO.write_simulation_time(self.TS.t, self.Pa)
+                print 232
                 self.Micro.stats_io(self.Gr, self.Ref, self.Th, self.PV, self.DV, self.StatsIO, self.Pa) # do Micro.stats_io prior to DV.stats_io to get sedimentation velocity only in output
+                print 234
                 self.PV.stats_io(self.Gr, self.Ref, self.StatsIO, self.Pa)
-
+                print 236
                 self.DV.stats_io(self.Gr, self.StatsIO, self.Pa)
+                print 238
                 self.Fo.stats_io(self.Gr, self.Ref, self.PV, self.DV, self.StatsIO, self.Pa)
+                print 240
                 self.Th.stats_io(self.Gr, self.Ref, self.PV, self.DV, self.StatsIO, self.Pa)
-
+                print 242
                 self.Sur.stats_io(self.Gr, self.StatsIO, self.Pa)
+                print 244
                 self.SGS.stats_io(self.Gr,self.DV,self.PV,self.Ke,self.StatsIO,self.Pa)
+                print 246
                 self.SA.stats_io(self.Gr, self.Ref,self.PV, self.StatsIO, self.Pa)
+                print 248
                 self.MA.stats_io(self.Gr, self.PV, self.StatsIO, self.Pa)
+                print 250
                 self.SD.stats_io(self.Gr, self.Ref,self.PV, self.DV, self.StatsIO, self.Pa)
+                print 252
                 self.MD.stats_io(self.Gr, self.PV, self.DV, self.Ke, self.StatsIO, self.Pa)
+                print 254
                 self.Ke.stats_io(self.Gr,self.Ref,self.PV,self.StatsIO,self.Pa)
+                print 256
                 self.Tr.stats_io(self.Gr, self.PV, self.DV, self.TS, self.StatsIO, self.Pa)
+                print 258
                 self.Ra.stats_io(self.Gr, self.Ref, self.DV, self.StatsIO, self.Pa)
+                print 260
                 self.Budg.stats_io(self.Sur, self.StatsIO, self.Pa)
-
+                print 262
                 self.Aux.stats_io(self.Gr, self.Ref, self.PV, self.DV, self.MA, self.MD, self.StatsIO, self.Pa)
+                print 264
                 self.StatsIO.close_files(self.Pa)
-                self.Pa.root_print('Finished Doing StatsIO')
-
+                print 266
+                self.Pa.root_print('Finished Doing StatsIO 249')
+                print 268
 
             # If time to ouput stats do output
             if self.CondStatsIO.last_output_time + self.CondStatsIO.frequency == self.TS.t:
@@ -295,7 +312,7 @@ class Simulation3d:
         self.FieldsIO.update(self.Gr, self.PV, self.DV, self.TS, self.Pa)
         self.FieldsIO.dump_prognostic_variables(self.Gr, self.PV)
         self.FieldsIO.dump_diagnostic_variables(self.Gr, self.DV, self.Pa)
-        self.Pa.root_print('Finished Doing 3D FieldIO')
+        self.Pa.root_print('Finished Doing 3D FieldIO 298')
 
         self.StatsIO.open_files(self.Pa)
         self.StatsIO.write_simulation_time(self.TS.t, self.Pa)
