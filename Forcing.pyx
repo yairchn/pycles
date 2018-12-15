@@ -76,7 +76,7 @@ cdef class Forcing:
     cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState RS,
                  PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV,  ParallelMPI.ParallelMPI Pa,
                  TimeStepping.TimeStepping TS):
-        self.scheme.update(Gr, RS, PV, DV, Pa)
+        self.scheme.update(Gr, RS, PV, DV, Pa, TS)
         return
 
     cpdef stats_io(self, Grid.Grid Gr, ReferenceState.ReferenceState RS,
@@ -583,7 +583,7 @@ cdef class ForcingARM_SGP: # YAIR - check if indeed you wanna duplicate DyCOMS_R
         self.dtdt = np.zeros(Gr.dims.nlg[2],dtype=np.double,order='c')  # theta
         self.dqtdt = np.zeros(Gr.dims.nlg[2],dtype=np.double,order='c')
         for k in range(0,Gr.dims.nlg[2]):
-            if Gr.zp_half[k] <= 200:
+            if Gr.z_half[k] <= 200:
                 self.dqtdt[k] = 0.08
                 self.dtdt[k] = 0.0 - 0.125
 
@@ -642,12 +642,12 @@ cdef class ForcingARM_SGP: # YAIR - check if indeed you wanna duplicate DyCOMS_R
             dtdt_a = np.interp(TS.t,t_in,AT_in)
             dtdt_r = np.interp(TS.t,t_in,RT_in)
             for k in range(0,Gr.dims.nlg[2]):
-                if Gr.zp_half[k] <=1000:
+                if Gr.z_half[k] <=1000:
                     self.dqtdt[k] = dqtdt
                     self.dtdt[k]  = (dtdt_a + dtdt_r) * exner_c(RS.p0_half[k])
-                elif Gr.zp_half[k] > 1000  and Gr.zp_half[k] <= 2000:
-                    self.dqtdt[k] =   dqtdt*(1-(Gr.zp_half[k]-1000)/1000)
-                    self.dtdt[k]  = (dtdt_a + dtdt_r) * exner_c(RS.p0_half[k])*(1-(Gr.zp_half[k]-1000)/1000)
+                elif Gr.z_half[k] > 1000  and Gr.z_half[k] <= 2000:
+                    self.dqtdt[k] =   dqtdt*(1-(Gr.z_half[k]-1000)/1000)
+                    self.dtdt[k]  = (dtdt_a + dtdt_r) * exner_c(RS.p0_half[k])*(1-(Gr.z_half[k]-1000)/1000)
          # Now update entropy tendenci
         with nogil:
             for i in xrange(imin, imax):
