@@ -391,7 +391,7 @@ cdef class UpdraftTracers:
         if 'ql' in DV.name_index:
             ql_shift = DV.get_varshift(Gr,'ql')
             self.get_cloud_heights(Gr, DV, Pa)
-            print('cloud base, height ', self.cloud_base, self.cloud_top)
+            print('cloud base, height', self.cloud_base, self.cloud_top)
             updraft_indicator_sc_w_ql(&Gr.dims, &PV.values[c_shift], &tracer_normed[0], &mean[0], &mean_square[0],
                                       &PV.values[w_shift],&DV.values[ql_shift], &Gr.z_half[0], self.cloud_base, self.cloud_top)
             # updraft_indicator_sc_w(&Gr.dims, &PV.values[c_shift], &tracer_normed[0], &mean[0], &mean_square[0], &PV.values[w_shift])
@@ -573,6 +573,7 @@ cdef class UpdraftTracers:
             NS.write_profile('updraft_cloudfraction', tmp[Gr.dims.gw:-Gr.dims.gw], Pa)
             tmp = Pa.HorizontalMeanConditional(Gr, &cloudfraction[0], &env_indicator[0])
             NS.write_profile('env_cloudfraction', tmp[Gr.dims.gw:-Gr.dims.gw], Pa)
+
 
 
 
