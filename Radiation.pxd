@@ -100,6 +100,7 @@ cdef class RadiationIsdac(RadiationBase):
         double kap
         double f0
         double f1
+        double [:] tmp
         double [:] radiative_flux
 
     cpdef initialize(self, Grid.Grid Gr, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa)
