@@ -35,6 +35,7 @@ cdef class UpdraftTracers:
         dict tracer_dict
         double cloud_base
         double cloud_top
+        double timescale
         double [:] updraft_indicator
 
     cpdef initialize(self, Grid.Grid Gr,  PrognosticVariables.PrognosticVariables PV,
