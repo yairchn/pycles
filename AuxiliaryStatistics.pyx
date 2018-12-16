@@ -356,8 +356,8 @@ class SmokeStatistics:
                     level_2 = level_1 + 1
                     smoke_1 = PV.values[smoke_shift + ij + level_1]
                     smoke_2 = PV.values[smoke_shift + ij + level_2]
-                    z1 = Gr.zl_half[level_1]
-                    z2 = Gr.zl_half[level_2]
+                    z1 = Gr.zpl_half[level_1]
+                    z2 = Gr.zpl_half[level_2]
                     dz = (0.5 - smoke_1)/(smoke_2 - smoke_1)*(z2 - z1)
 
                     blh[ij2d] = z1 + dz
@@ -410,8 +410,8 @@ class DYCOMSStatistics:
                     level_2 = level_1 + 1
                     qt_1 = PV.values[qt_shift + ij + level_1]
                     qt_2 = PV.values[qt_shift+ ij + level_2]
-                    z1 = Gr.zl_half[level_1]
-                    z2 = Gr.zl_half[level_2]
+                    z1 = Gr.zpl_half[level_1]
+                    z2 = Gr.zpl_half[level_2]
                     dz = (0.005 - qt_1)/(qt_2 - qt_1)*(z2 - z1)
 
                     blh[ij2d] = z1 + dz

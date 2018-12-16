@@ -466,8 +466,8 @@ cdef class ThermodynamicsSA:
             for pi in xrange(z_pencil.n_local_pencils):
                 for k in xrange(kmin, kmax):
                     if ql_pencils[pi, k] > 0.0:
-                        cb = fmin(cb, Gr.z_half[gw + k])
-                        ct = fmax(ct, Gr.z_half[gw + k])
+                        cb = fmin(cb, Gr.zpl_half[gw + k])
+                        ct = fmax(ct, Gr.zpl_half[gw + k])
 
         cb = Pa.domain_scalar_min(cb)
         ct = Pa.domain_scalar_max(ct)

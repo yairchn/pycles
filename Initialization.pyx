@@ -98,7 +98,7 @@ def InitStableBubble(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariab
                 PV.values[u_varshift + ijk] = 0.0
                 PV.values[v_varshift + ijk] = 0.0
                 PV.values[w_varshift + ijk] = 0.0
-                dist  = np.sqrt(((Gr.x_half[i + Gr.dims.indx_lo[0]]/1000.0 - 25.6)/4.0)**2.0 + ((Gr.z_half[k + Gr.dims.indx_lo[2]]/1000.0 - 3.0)/2.0)**2.0)
+                dist  = np.sqrt(((Gr.x_half[i + Gr.dims.indx_lo[0]]/1000.0 - 25.6)/4.0)**2.0 + ((Gr.zpl_half[k + Gr.dims.indx_lo[2]]/1000.0 - 3.0)/2.0)**2.0)
                 dist = fmin(dist,1.0)
                 t = (300.0 )*exner_c(RS.p0_half[k]) - 15.0*( cos(np.pi * dist) + 1.0) /2.0
                 PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k],t,0.0,0.0,0.0)
@@ -178,7 +178,7 @@ def InitSaturatedBubble(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVari
             jshift = j * Gr.dims.nlg[2]
             for k in xrange(Gr.dims.nlg[2]):
                 ijk = ishift + jshift + k
-                dist = np.sqrt(((Gr.x_half[i + Gr.dims.indx_lo[0]]/1000.0 - 10.0)/2.0)**2.0 + ((Gr.z_half[k + Gr.dims.indx_lo[2]]/1000.0 - 2.0)/2.0)**2.0)
+                dist = np.sqrt(((Gr.x_half[i + Gr.dims.indx_lo[0]]/1000.0 - 10.0)/2.0)**2.0 + ((Gr.zpl_half[k + Gr.dims.indx_lo[2]]/1000.0 - 2.0)/2.0)**2.0)
                 dist = np.minimum(1.0,dist)
                 thetas = RS.Tg
                 thetas += 2.0 * np.cos(np.pi * dist / 2.0)**2.0
@@ -220,12 +220,12 @@ def InitSullivanPatton(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVaria
         cdef double theta_pert_
 
     for k in xrange(Gr.dims.nlg[2]):
-        if Gr.zl_half[k] <=  974.0:
+        if Gr.zpl_half[k] <=  974.0:
             theta[k] = 300.0
-        elif Gr.zl_half[k] <= 1074.0:
-            theta[k] = 300.0 + (Gr.zl_half[k] - 974.0) * 0.08
+        elif Gr.zpl_half[k] <= 1074.0:
+            theta[k] = 300.0 + (Gr.zpl_half[k] - 974.0) * 0.08
         else:
-            theta[k] = 308.0 + (Gr.zl_half[k] - 1074.0) * 0.003
+            theta[k] = 308.0 + (Gr.zpl_half[k] - 1074.0) * 0.003
 
     cdef double [:] p0 = RS.p0_half
 
@@ -241,7 +241,7 @@ def InitSullivanPatton(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVaria
                 PV.values[w_varshift + ijk] = 0.0
 
                 #Now set the entropy prognostic variable including a potential temperature perturbation
-                if Gr.zl_half[k] < 200.0:
+                if Gr.zpl_half[k] < 200.0:
                     theta_pert_ = (theta_pert[ijk] - 0.5)* 0.1
                 else:
                     theta_pert_ = 0.0
@@ -300,33 +300,33 @@ def InitBomex(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
     for k in xrange(Gr.dims.nlg[2]):
 
         #Set Thetal profile
-        if Gr.zl_half[k] <= 520.:
+        if Gr.zpl_half[k] <= 520.:
             thetal[k] = 298.7
-        if Gr.zl_half[k] > 520.0 and Gr.zl_half[k] <= 1480.0:
-            thetal[k] = 298.7 + (Gr.zl_half[k] - 520)  * (302.4 - 298.7)/(1480.0 - 520.0)
-        if Gr.zl_half[k] > 1480.0 and Gr.zl_half[k] <= 2000:
-            thetal[k] = 302.4 + (Gr.zl_half[k] - 1480.0) * (308.2 - 302.4)/(2000.0 - 1480.0)
-        if Gr.zl_half[k] > 2000.0:
-            thetal[k] = 308.2 + (Gr.zl_half[k] - 2000.0) * (311.85 - 308.2)/(3000.0 - 2000.0)
+        if Gr.zpl_half[k] > 520.0 and Gr.zpl_half[k] <= 1480.0:
+            thetal[k] = 298.7 + (Gr.zpl_half[k] - 520)  * (302.4 - 298.7)/(1480.0 - 520.0)
+        if Gr.zpl_half[k] > 1480.0 and Gr.zpl_half[k] <= 2000:
+            thetal[k] = 302.4 + (Gr.zpl_half[k] - 1480.0) * (308.2 - 302.4)/(2000.0 - 1480.0)
+        if Gr.zpl_half[k] > 2000.0:
+            thetal[k] = 308.2 + (Gr.zpl_half[k] - 2000.0) * (311.85 - 308.2)/(3000.0 - 2000.0)
 
         #Set qt profile
-        if Gr.zl_half[k] <= 520:
-            qt[k] = 17.0 + (Gr.zl_half[k]) * (16.3-17.0)/520.0
-        if Gr.zl_half[k] > 520.0 and Gr.zl_half[k] <= 1480.0:
-            qt[k] = 16.3 + (Gr.zl_half[k] - 520.0)*(10.7 - 16.3)/(1480.0 - 520.0)
-        if Gr.zl_half[k] > 1480.0 and Gr.zl_half[k] <= 2000.0:
-            qt[k] = 10.7 + (Gr.zl_half[k] - 1480.0) * (4.2 - 10.7)/(2000.0 - 1480.0)
-        if Gr.zl_half[k] > 2000.0:
-            qt[k] = 4.2 + (Gr.zl_half[k] - 2000.0) * (3.0 - 4.2)/(3000.0  - 2000.0)
+        if Gr.zpl_half[k] <= 520:
+            qt[k] = 17.0 + (Gr.zpl_half[k]) * (16.3-17.0)/520.0
+        if Gr.zpl_half[k] > 520.0 and Gr.zpl_half[k] <= 1480.0:
+            qt[k] = 16.3 + (Gr.zpl_half[k] - 520.0)*(10.7 - 16.3)/(1480.0 - 520.0)
+        if Gr.zpl_half[k] > 1480.0 and Gr.zpl_half[k] <= 2000.0:
+            qt[k] = 10.7 + (Gr.zpl_half[k] - 1480.0) * (4.2 - 10.7)/(2000.0 - 1480.0)
+        if Gr.zpl_half[k] > 2000.0:
+            qt[k] = 4.2 + (Gr.zpl_half[k] - 2000.0) * (3.0 - 4.2)/(3000.0  - 2000.0)
 
         #Change units to kg/kg
         qt[k]/= 1000.0
 
         #Set u profile
-        if Gr.zl_half[k] <= 700.0:
+        if Gr.zpl_half[k] <= 700.0:
             u[k] = -8.75
-        if Gr.zl_half[k] > 700.0:
-            u[k] = -8.75 + (Gr.zl_half[k] - 700.0) * (-4.61 - -8.75)/(3000.0 - 700.0)
+        if Gr.zpl_half[k] > 700.0:
+            u[k] = -8.75 + (Gr.zpl_half[k] - 700.0) * (-4.61 - -8.75)/(3000.0 - 700.0)
 
     #Set velocities for Galilean transformation
     RS.v0 = 0.0
@@ -346,7 +346,7 @@ def InitBomex(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
                 PV.values[u_varshift + ijk] = u[k] - RS.u0
                 PV.values[v_varshift + ijk] = 0.0 - RS.v0
                 PV.values[w_varshift + ijk] = 0.0
-                if Gr.zl_half[k] <= 1600.0:
+                if Gr.zpl_half[k] <= 1600.0:
                     temp = (thetal[k] + (theta_pert[count])) * exner_c(RS.p0_half[k])
                     qt_ = qt[k]+qt_pert[count]
                 else:
@@ -364,7 +364,7 @@ def InitBomex(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
                 jshift = j * Gr.dims.nlg[2]
                 for k in xrange(Gr.dims.nlg[2]):
                     ijk = ishift + jshift + k
-                    PV.values[e_varshift + ijk] = 1.0-Gr.zl_half[k]/3000.0
+                    PV.values[e_varshift + ijk] = 1.0-Gr.zpl_half[k]/3000.0
 
 
     return
@@ -400,11 +400,11 @@ def InitGabls(namelist,Grid.Grid Gr, PrognosticVariables.PrognosticVariables PV,
         cdef double theta_pert_
 
     for k in xrange(Gr.dims.nlg[2]):
-        if Gr.zl_half[k] <=  100.0:
+        if Gr.zpl_half[k] <=  100.0:
             theta[k] = 265.0
 
         else:
-            theta[k] = 265.0 + (Gr.zl_half[k] - 100.0) * 0.01
+            theta[k] = 265.0 + (Gr.zpl_half[k] - 100.0) * 0.01
 
     cdef double [:] p0 = RS.p0_half
 
@@ -421,7 +421,7 @@ def InitGabls(namelist,Grid.Grid Gr, PrognosticVariables.PrognosticVariables PV,
                 PV.values[w_varshift + ijk] = 0.0
 
                 #Now set the entropy prognostic variable including a potential temperature perturbation
-                if Gr.zl_half[k] < 50.0:
+                if Gr.zpl_half[k] < 50.0:
                     theta_pert_ = (theta_pert[ijk] - 0.5)* 0.1
                 else:
                     theta_pert_ = 0.0
@@ -438,8 +438,8 @@ def InitGabls(namelist,Grid.Grid Gr, PrognosticVariables.PrognosticVariables PV,
                 jshift = j * Gr.dims.nlg[2]
                 for k in xrange(Gr.dims.nlg[2]):
                     ijk = ishift + jshift + k
-                    if Gr.zl_half[k] <= 250.0:
-                        PV.values[e_varshift + ijk] = 0.4*(1.0-Gr.zl_half[k]/250.0)**3.0
+                    if Gr.zpl_half[k] <= 250.0:
+                        PV.values[e_varshift + ijk] = 0.4*(1.0-Gr.zpl_half[k]/250.0)**3.0
                     else:
                         PV.values[e_varshift + ijk] = 0.0
 
@@ -492,11 +492,11 @@ def InitDYCOMS_RF01(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariable
         Py_ssize_t e_varshift
 
     for k in xrange(Gr.dims.nlg[2]):
-        if Gr.zl_half[k] <=840.0:
+        if Gr.zpl_half[k] <=840.0:
             thetal[k] = 289.0
             qt[k] = 9.0/1000.0
-        if Gr.zl_half[k] > 840.0:
-            thetal[k] = 297.5 + (Gr.zl_half[k] - 840.0)**(1.0/3.0)
+        if Gr.zpl_half[k] > 840.0:
+            thetal[k] = 297.5 + (Gr.zpl_half[k] - 840.0)**(1.0/3.0)
             qt[k] = 1.5/1000.0
 
     def compute_thetal(p_,T_,ql_):
@@ -559,7 +559,7 @@ def InitDYCOMS_RF01(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariable
                 PV.values[ijk + qt_varshift]  = qt[k]
 
                 #Now set the entropy prognostic variable including a potential temperature perturbation
-                if Gr.zl_half[k] < 200.0:
+                if Gr.zpl_half[k] < 200.0:
                     theta_pert_ = (theta_pert[ijk] - 0.5)* 0.1
                 else:
                     theta_pert_ = 0.0
@@ -575,7 +575,7 @@ def InitDYCOMS_RF01(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariable
                 jshift = j * Gr.dims.nlg[2]
                 for k in xrange(Gr.dims.nlg[2]):
                     ijk = ishift + jshift + k
-                    if Gr.zl_half[k] < 200.0:
+                    if Gr.zpl_half[k] < 200.0:
                         PV.values[e_varshift + ijk] = 0.0
 
     return
@@ -618,14 +618,14 @@ def InitDYCOMS_RF02(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariable
         double [:] v = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
 
     for k in xrange(Gr.dims.nlg[2]):
-        if Gr.zl_half[k] <=795.0:
+        if Gr.zpl_half[k] <=795.0:
             thetal[k] = 288.3
             qt[k] = 9.45/1000.0
-        if Gr.zl_half[k] > 795.0:
-            thetal[k] = 295.0 + (Gr.zl_half[k] - 795.0)**(1.0/3.0)
-            qt[k] = (5.0 - 3.0 * (1.0 - np.exp(-(Gr.zl_half[k] - 795.0)/500.0)))/1000.0
-        v[k] = -9.0 + 5.6 * Gr.zl_half[k]/1000.0 - RS.v0
-        u[k] = 3.0 + 4.3*Gr.zl_half[k]/1000.0 - RS.u0
+        if Gr.zpl_half[k] > 795.0:
+            thetal[k] = 295.0 + (Gr.zpl_half[k] - 795.0)**(1.0/3.0)
+            qt[k] = (5.0 - 3.0 * (1.0 - np.exp(-(Gr.zpl_half[k] - 795.0)/500.0)))/1000.0
+        v[k] = -9.0 + 5.6 * Gr.zpl_half[k]/1000.0 - RS.v0
+        u[k] = 3.0 + 4.3*Gr.zpl_half[k]/1000.0 - RS.u0
 
     def compute_thetal(p_,T_,ql_):
         theta_ = T_ / (p_/p_tilde)**(287.0/cp_ref)
@@ -687,7 +687,7 @@ def InitDYCOMS_RF02(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariable
                 PV.values[ijk + qt_varshift]  = qt[k]
 
                 #Now set the entropy prognostic variable including a potential temperature perturbation
-                if Gr.zl_half[k] < 795.0:
+                if Gr.zpl_half[k] < 795.0:
                     theta_pert_ = (theta_pert[ijk] - 0.5)* 0.1
                 else:
                     theta_pert_ = 0.0
@@ -742,15 +742,15 @@ def InitSmoke(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
         cdef double theta_pert_
 
     for k in xrange(Gr.dims.nlg[2]):
-        if Gr.zl_half[k] <=  687.5:
+        if Gr.zpl_half[k] <=  687.5:
             theta[k] = 288.0
             smoke[k] = 1.0
-        elif Gr.zl_half[k] >= 687.5 and Gr.zl_half[k] <= 712.5:
-            theta[k] = 288.0 + (Gr.zl_half[k] - 687.5) * 0.28
-            smoke[k] = 1.0 - 0.04 * (Gr.zl_half[k] - 687.5)
-            print k, Gr.zl_half[k], smoke[k]
+        elif Gr.zpl_half[k] >= 687.5 and Gr.zpl_half[k] <= 712.5:
+            theta[k] = 288.0 + (Gr.zpl_half[k] - 687.5) * 0.28
+            smoke[k] = 1.0 - 0.04 * (Gr.zpl_half[k] - 687.5)
+            print k, Gr.zpl_half[k], smoke[k]
         else:
-            theta[k] = 295.0 + (Gr.zl_half[k] - 712.5) * 1e-4
+            theta[k] = 295.0 + (Gr.zpl_half[k] - 712.5) * 1e-4
             smoke[k] = 0.0
 
     cdef double [:] p0 = RS.p0_half
@@ -767,7 +767,7 @@ def InitSmoke(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
                 PV.values[w_varshift + ijk] = 0.0
 
                 #Now set the entropy prognostic variable including a potential temperature perturbation
-                if Gr.zl_half[k] < 700.0:
+                if Gr.zpl_half[k] < 700.0:
                     theta_pert_ = (theta_pert[ijk] - 0.5)* 0.1
                 else:
                     theta_pert_ = 0.0
@@ -784,7 +784,7 @@ def InitSmoke(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
                 jshift = j * Gr.dims.nlg[2]
                 for k in xrange(Gr.dims.nlg[2]):
                     ijk = ishift + jshift + k
-                    if Gr.zl_half[k] < 700.0:
+                    if Gr.zpl_half[k] < 700.0:
                         PV.values[e_varshift + ijk] = 0.1
                     else:
                         PV.values[e_varshift + ijk] = 0.0
@@ -829,26 +829,26 @@ def InitRico(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
     for k in xrange(Gr.dims.nlg[2]):
 
         #Set Thetal profile
-        if Gr.zl_half[k] <= 740.0:
+        if Gr.zpl_half[k] <= 740.0:
             theta[k] = 297.9
         else:
-            theta[k] = 297.9 + (317.0-297.9)/(4000.0-740.0)*(Gr.zl_half[k] - 740.0)
+            theta[k] = 297.9 + (317.0-297.9)/(4000.0-740.0)*(Gr.zpl_half[k] - 740.0)
 
 
         #Set qt profile
-        if Gr.zl_half[k] <= 740.0:
-            qt[k] =  16.0 + (13.8 - 16.0)/740.0 * Gr.zl_half[k]
-        elif Gr.zl_half[k] > 740.0 and Gr.zl_half[k] <= 3260.0:
-            qt[k] = 13.8 + (2.4 - 13.8)/(3260.0-740.0) * (Gr.zl_half[k] - 740.0)
+        if Gr.zpl_half[k] <= 740.0:
+            qt[k] =  16.0 + (13.8 - 16.0)/740.0 * Gr.zpl_half[k]
+        elif Gr.zpl_half[k] > 740.0 and Gr.zpl_half[k] <= 3260.0:
+            qt[k] = 13.8 + (2.4 - 13.8)/(3260.0-740.0) * (Gr.zpl_half[k] - 740.0)
         else:
-            qt[k] = 2.4 + (1.8-2.4)/(4000.0-3260.0)*(Gr.zl_half[k] - 3260.0)
+            qt[k] = 2.4 + (1.8-2.4)/(4000.0-3260.0)*(Gr.zpl_half[k] - 3260.0)
 
 
         #Change units to kg/kg
         qt[k]/= 1000.0
 
         #Set u profile
-        u[k] = -9.9 + 2.0e-3 * Gr.zl_half[k]
+        u[k] = -9.9 + 2.0e-3 * Gr.zpl_half[k]
         #set v profile
         v[k] = -3.8
     #Set velocities for Galilean transformation
@@ -869,7 +869,7 @@ def InitRico(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
                 PV.values[u_varshift + ijk] = u[k] - RS.u0
                 PV.values[v_varshift + ijk] = v[k] - RS.v0
                 PV.values[w_varshift + ijk] = 0.0
-                if Gr.zl_half[k] <= 740.0:
+                if Gr.zpl_half[k] <= 740.0:
                     temp = (theta[k] + (theta_pert[count])) * exner_c(RS.p0_half[k])
                     qt_ = qt[k]+qt_pert[count]
                 else:
@@ -887,7 +887,7 @@ def InitRico(namelist,Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
                 jshift = j * Gr.dims.nlg[2]
                 for k in xrange(Gr.dims.nlg[2]):
                     ijk = ishift + jshift + k
-                    if Gr.zl_half[k] <= 740.0:
+                    if Gr.zpl_half[k] <= 740.0:
                         PV.values[e_varshift + ijk] = 0.1
 
 
@@ -927,8 +927,8 @@ def InitARM_SGP(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables P
         #double [:] u = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
         #double [:] v = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
 
-    Theta = np.interp(Gr.z_half,z_in,Theta_in)
-    qt = np.interp(Gr.z_half,z_in,qt_in)
+    Theta = np.interp(Gr.zpl_half,z_in,Theta_in)
+    qt = np.interp(Gr.zpl_half,z_in,qt_in)
 
 
       #Set velocities for Galilean transformation
@@ -958,8 +958,8 @@ def InitARM_SGP(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables P
                 PV.values[ijk + w_varshift] = 0.0
                 PV.values[ijk + qt_varshift]  = qt[k]
                 T  = Theta[k]*exner_c(RS.p0_half[k])
-                if Gr.z_half[k] < 200.0: # perturbation temp on the lower 200 m and decrease linearly from 0 to 200m
-                    T_pert_ = T_pert[ijk]*(1 - Gr.z_half[k]/200)* 0.1
+                if Gr.zpl_half[k] < 200.0: # perturbation temp on the lower 200 m and decrease linearly from 0 to 200m
+                    T_pert_ = T_pert[ijk]*(1 - Gr.zpl_half[k]/200)* 0.1
                     PV.values[ijk + s_varshift] = Th.entropy(RS.p0_half[k], T + T_pert_, qt[k], 0.0, 0.0)
                 else:
                     PV.values[ijk + s_varshift] = Th.entropy(RS.p0_half[k], T , qt[k], 0.0, 0.0)
@@ -1011,24 +1011,24 @@ def InitIsdac(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
     for k in xrange(Gr.dims.nlg[2]):
 
         #Set thetal and qt profile
-        if Gr.zl_half[k] < 400.0:
-            thetal[k] = 265.0 + 0.004 * (Gr.zl_half[k] - 400.0)
-            qt[k] = 1.5 - 0.00075 * (Gr.zl_half[k] - 400.0)
-        if Gr.zl_half[k] >= 400.0 and Gr.zl_half[k] < 825.0:
+        if Gr.zpl_half[k] < 400.0:
+            thetal[k] = 265.0 + 0.004 * (Gr.zpl_half[k] - 400.0)
+            qt[k] = 1.5 - 0.00075 * (Gr.zpl_half[k] - 400.0)
+        if Gr.zpl_half[k] >= 400.0 and Gr.zpl_half[k] < 825.0:
             thetal[k] = 265.0
             qt[k] = 1.5
-        if Gr.zl_half[k] >= 825.0 and Gr.zl_half[k] < 2045.0:
-            thetal[k] = 266.0 + (Gr.zl_half[k] - 825.0) ** 0.3
+        if Gr.zpl_half[k] >= 825.0 and Gr.zpl_half[k] < 2045.0:
+            thetal[k] = 266.0 + (Gr.zpl_half[k] - 825.0) ** 0.3
             qt[k] = 1.2
-        if Gr.zl_half[k] >= 2045.0:
-            thetal[k] = 271.0 + (Gr.zl_half[k] - 2000.0) ** 0.33
-            qt[k] = 0.5 - 0.000075 * (Gr.zl_half[k] - 2045.0)
+        if Gr.zpl_half[k] >= 2045.0:
+            thetal[k] = 271.0 + (Gr.zpl_half[k] - 2000.0) ** 0.33
+            qt[k] = 0.5 - 0.000075 * (Gr.zpl_half[k] - 2045.0)
 
         #Change units to kg/kg
         qt[k]/= 1000.0
 
         #Set v profile
-        v[k] = -2.0 + 0.003 * Gr.zl_half[k]
+        v[k] = -2.0 + 0.003 * Gr.zpl_half[k]
 
     #Set velocities for Galilean transformation
     RS.u0 = -7.0
@@ -1051,7 +1051,7 @@ def InitIsdac(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
                 PV.values[ijk + qt_varshift]  = qt[k]
 
                 #Now set the entropy prognostic variable including a potential temperature perturbation
-                if Gr.zl_half[k] < 825.0:
+                if Gr.zpl_half[k] < 825.0:
                     theta_pert_ = (theta_pert[ijk] - 0.5)* 0.1
                 else:
                     theta_pert_ = 0.0
@@ -1119,11 +1119,11 @@ def InitIsdacCC(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables P
 
     for k in xrange(Gr.dims.nlg[2]):
         #Set thetal and qt profile
-        if Gr.zl_half[k] <= z_top:
+        if Gr.zpl_half[k] <= z_top:
             RS.ic_thetal[k] = RS.Tg
-        if z_top < Gr.zl_half[k] <= (z_top + dz_inv):
-            RS.ic_thetal[k] = RS.Tg + (Gr.zl_half[k] - z_top) * thetal_inv / dz_inv
-        if Gr.zl_half[k] > (z_top + dz_inv):
+        if z_top < Gr.zpl_half[k] <= (z_top + dz_inv):
+            RS.ic_thetal[k] = RS.Tg + (Gr.zpl_half[k] - z_top) * thetal_inv / dz_inv
+        if Gr.zpl_half[k] > (z_top + dz_inv):
             RS.ic_thetal[k] = RS.ic_thetal[k-1] + Gr.dims.dx[2] * thetal_gamma
             temp[k] = RS.ic_thetal[k] * (RS.p0_half[k] / p_tilde)**(Rd/cpd)
             pv_sat = Th.get_pv_star(temp[k])
@@ -1146,22 +1146,22 @@ def InitIsdacCC(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables P
         Pa.root_print(rh_tropo)
 
         for k in xrange(Gr.dims.nlg[2]):
-            if Gr.zl_half[k] > (z_top + dz_inv):
+            if Gr.zpl_half[k] > (z_top + dz_inv):
                 pv_sat = Th.get_pv_star(temp[k])
                 pv = pv_sat * rh_tropo
                 RS.ic_qt[k] = qv_unsat(RS.p0_half[k], pv)
                 rh[k] = rh_tropo
 
     for k in xrange(Gr.dims.nlg[2]):
-        if Gr.zl_half[k] <= z_top:
+        if Gr.zpl_half[k] <= z_top:
             RS.ic_qt[k] = RS.qtg
 
     for k in xrange(Gr.dims.nlg[2]):
-        if z_top < Gr.zl_half[k] <= (z_top + dz_inv):
-            RS.ic_qt[k] = RS.qtg - (Gr.zl_half[k] - z_top) * (RS.qtg - qt_above_inv) / dz_inv
+        if z_top < Gr.zpl_half[k] <= (z_top + dz_inv):
+            RS.ic_qt[k] = RS.qtg - (Gr.zpl_half[k] - z_top) * (RS.qtg - qt_above_inv) / dz_inv
 
     for k in xrange(Gr.dims.nlg[2]):
-        if Gr.zl_half[k] <= (z_top + dz_inv):
+        if Gr.zpl_half[k] <= (z_top + dz_inv):
             T, ql = sat_adjst(RS.p0_half[k], RS.ic_thetal[k], RS.ic_qt[k], Th)
             pv_sat = Th.get_pv_star(T)
             qv = RS.ic_qt[k] - ql
@@ -1171,7 +1171,7 @@ def InitIsdacCC(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables P
 
     for k in xrange(Gr.dims.nlg[2]):
         #Set u profile
-        v[k] = -2.0 + 0.003 * Gr.zl_half[k]
+        v[k] = -2.0 + 0.003 * Gr.zpl_half[k]
 
     #Set velocities for Galilean transformation
     RS.u0 = -7.0
@@ -1194,7 +1194,7 @@ def InitIsdacCC(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables P
                 PV.values[ijk + qt_varshift]  = RS.ic_qt[k]
 
                 #Now set the entropy prognostic variable including a potential temperature perturbation
-                if Gr.zl_half[k] < 825.0:
+                if Gr.zpl_half[k] < 825.0:
                     theta_pert_ = (theta_pert[ijk] - 0.5)* 0.1
                 else:
                     theta_pert_ = 0.0
@@ -1641,7 +1641,7 @@ def InitCGILS(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
                 PV.values[ijk + qt_varshift]  = qt[k]
 
                 #Now set the entropy prognostic variable including a potential temperature perturbation
-                if Gr.zl_half[k] < 200.0:
+                if Gr.zpl_half[k] < 200.0:
                     theta_pert_ = (theta_pert[ijk] - 0.5)* 0.1
                 else:
                     theta_pert_ = 0.0
