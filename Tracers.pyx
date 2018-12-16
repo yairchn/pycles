@@ -73,6 +73,13 @@ cdef class UpdraftTracers:
         except:
             self.lcl_tracers = False
 
+        try:
+            self.timescale = namelist['tracers']['timescale']
+            print 'tracer timescale is set to', self.timescale
+        except:
+            self.timescale = 15.0
+            print 'defaulting to 15min tracer decay timescale'
+
         self.index_lcl = 0
 
         return
