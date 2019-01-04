@@ -1163,9 +1163,9 @@ cdef class RadiationTRMM_LBA(RadiationBase):
                      NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):
 
         # build a matrix of interpulated radiative forcing
-        A = np.interp(Gr.zp_half,self.z_in,self.rad_in[0,:]) # Gr.zp_half,self.rad
+        A = np.interp(Gr.zpl_half,self.z_in,self.rad_in[0,:]) # Gr.zp_half,self.rad
         for tt in range(1,36):
-            A = np.vstack((A, np.interp(Gr.zp_half,self.z_in,self.rad_in[tt,:])))
+            A = np.vstack((A, np.interp(Gr.zpl_half,self.z_in,self.rad_in[tt,:])))
         self.rad = A # store matrix in self
         return
 
