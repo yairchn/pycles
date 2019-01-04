@@ -2005,8 +2005,8 @@ cdef class ForcingTRMM_LBA: # YAIR - check if indeed you wanna duplicate DyCOMS_
                       5.32,   1.14,  -0.65,   5.27,   5.27]),0.5)
 
 
-        self.nudge_u = np.interp(Gr.zp_half,z_in,u_in)
-        self.nudge_v = np.interp(Gr.zp_half,z_in,v_in)
+        self.nudge_u = np.interp(Gr.zpl_half,z_in,u_in)
+        self.nudge_v = np.interp(Gr.zpl_half,z_in,v_in)
 
         # Initialize arrays for the  nudging related source terms
         self.source_u_nudge = np.zeros(Gr.dims.nlg[2])
@@ -2272,7 +2272,7 @@ cdef class ForcingGATE_III:
             double [:] umean = Pa.HorizontalMean(Gr, &PV.values[u_shift])
             double [:] vmean = Pa.HorizontalMean(Gr, &PV.values[v_shift])
         # interpolate u_in
-        self.nudge_u = np.interp(Gr.zp_half,z_in,u_in)
+        self.nudge_u = np.interp(Gr.zpl_half,z_in,u_in)
         with nogil:
         # Nudge mean wind profiles through entire depth
             for k in xrange(kmin, kmax):
@@ -2295,8 +2295,8 @@ cdef class ForcingGATE_III:
         # interpolate radiative and advective forcing
         for k in xrange(kmin, kmax):
             if Gr.zp_half[k] < 18000.0:
-                self.dqtdt[k] = np.interp(Gr.zp_half[k],z_in,Qtend_in)
-                self.dtdt[k]  = np.interp(Gr.zp_half[k],z_in,Ttend_in) + np.interp(Gr.zp_half[k],z_in,RAD_in) # T tendency is teh sum of radiative and advective
+                self.dqtdt[k] = np.interp(Gr.zpl_half[k],z_in,Qtend_in)
+                self.dtdt[k]  = np.interp(Gr.zpl_half[k],z_in,Ttend_in) + np.interp(Gr.zpl_half[k],z_in,RAD_in) # T tendency is teh sum of radiative and advective
             else:
                 self.dqtdt[k] = 0.0
                 self.dtdt[k]  = 0.0
