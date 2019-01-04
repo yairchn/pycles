@@ -1180,9 +1180,11 @@ cdef class RadiationTRMM_LBA(RadiationBase):
         if TS.t<600.0: # first 10 min use the radiative forcing of t=10min
             for kk in range(0,Gr.dims.nlg[2]):
                 self.rad_cool[kk] = self.rad[0,kk]
-        elif TS.t>18900.0:
-            for kk in range(0,Gr.dims.nlg[2]):
-                self.rad_cool[kk] = (self.rad[31,kk]-self.rad[30,kk])/(self.rad_time[31]-self.rad_time[30])*(18900.0-self.rad_time[30])+self.rad[30,kk]
+
+        # to fix fluxes at max values use this
+        #elif TS.t>18900.0:
+        #    for kk in range(0,Gr.dims.nlg[2]):
+        #        self.rad_cool[kk] = (self.rad[31,kk]-self.rad[30,kk])/(self.rad_time[31]-self.rad_time[30])*(18900.0-self.rad_time[30])+self.rad[30,kk]
 
         else:
             if TS.t%600.0 == 0:     # in case you step right on the data point
