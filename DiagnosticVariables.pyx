@@ -132,7 +132,6 @@ cdef class DiagnosticVariables:
         #Add prognostic variables to Statistics IO
         Pa.root_print('Setting up statistical output files for Diagnostic Variables')
         for var_name in self.name_index.keys():
-            print var_name
             #Add mean profile
             NS.add_profile(var_name+'_mean', Gr, Pa,  units=self.units[var_name], nice_name = r'\overline{' + var_name + r'}', desc=var_name + ' hoizontal domain mean')
             #Add mean of squares profile

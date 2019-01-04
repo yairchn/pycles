@@ -167,10 +167,6 @@ cdef class ParallelMPI:
                         local_int += 0.5 * (values[ijk] * rho[k] + values[ijk-1] * rho[k-1])  * Gr.dims.dx[0] * Gr.dims.dx[1] * (Gr.zp_half[k] - Gr.zp_half[k-1])
                     local_int +=  (values[ishift + jshift + k+1] * rho[k+1])  * Gr.dims.dx[0] * Gr.dims.dx[1] * ( Gr.zp[k+1] - Gr.zp_half[k+1])
 
-                    #with gil:
-                    #    print Gr.zp_half[Gr.dims.gw], Gr.zp[Gr.dims.gw-1], Gr.zp[k+1],  Gr.zp_half[k+1]
-
-
         return self.domain_scalar_sum(local_int)
 
     cdef double domain_scalar_sum(self, double local_value):
