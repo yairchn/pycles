@@ -1459,11 +1459,11 @@ def InitTRMM_LBA(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables 
         double [:] u = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
         double [:] v = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
 
-    T = np.interp(Gr.z_half,z_in,T_in)
-    p = np.interp(Gr.z_half,z_in,p_in)
-    RH = np.interp(Gr.z_half,z_in,RH_in)
-    u = np.interp(Gr.z_half,z_in,u_in)
-    v = np.interp(Gr.z_half,z_in,v_in)
+    T = np.interp(Gr.zpl_half,z_in,T_in)
+    p = np.interp(Gr.zpl_half,z_in,p_in)
+    RH = np.interp(Gr.zpl_half,z_in,RH_in)
+    u = np.interp(Gr.zpl_half,z_in,u_in)
+    v = np.interp(Gr.zpl_half,z_in,v_in)
 
       #Set velocities for Galilean transformation
     RS.u0 = 0.5 * (np.amax(u)+np.amin(u))
@@ -1495,7 +1495,7 @@ def InitTRMM_LBA(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables 
                 PV.values[ijk + w_varshift] = 0.0
                 PV.values[ijk + qt_varshift]  = qt[k]
 
-                if Gr.z_half[k] < 1000.0:
+                if Gr.zpl_half[k] < 1000.0:
                     T_pert_ = (T_pert[ijk] - 0.5)* 0.1
                     PV.values[ijk + s_varshift] = Th.entropy(RS.p0_half[k], T[k] + T_pert_, qt[k], 0.0, 0.0)
                 else:
@@ -1537,8 +1537,8 @@ def InitARM_SGP(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables P
         #double [:] u = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
         #double [:] v = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
 
-    Theta = np.interp(Gr.z_half,z_in,Theta_in)
-    qt = np.interp(Gr.z_half,z_in,qt_in)
+    Theta = np.interp(Gr.zpl_half,z_in,Theta_in)
+    qt = np.interp(Gr.zpl_half,z_in,qt_in)
 
 
       #Set velocities for Galilean transformation
@@ -1691,14 +1691,14 @@ def InitGATE_III(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables 
         double [:] u = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
         #double [:] v = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
 
-    T = np.interp(Gr.z_half,z_T_in,T_in)
+    T = np.interp(Gr.zpl_half,z_T_in,T_in)
     T[Gr.dims.gw-1] = T[Gr.dims.gw]
     T[Gr.dims.gw-2] = T[Gr.dims.gw+1]
     T[Gr.dims.gw-3] = T[Gr.dims.gw+2]
     #T[1] = T[Gr.gw+1]
 
-    qt = np.interp(Gr.z_half,z_in,qt_in)
-    u  = np.interp(Gr.z_half,z_in,U_in)
+    qt = np.interp(Gr.zpl_half,z_in,qt_in)
+    u  = np.interp(Gr.zpl_half,z_in,U_in)
     #Set velocities for Galilean transformation
     RS.u0 = 0.5 * (np.amax(u)+np.amin(u))
     RS.v0 = 0.5 * (np.amax(v)+np.amin(v))
@@ -1783,12 +1783,12 @@ def InitWANGARA(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables P
         double [:] vg = np.zeros((Gr.dims.nlg[2],),dtype=np.double,order='c')
 
 
-    u = np.interp(Gr.z_half,z_u_in,u_in)
-    v = np.interp(Gr.z_half,z_v_in,v_in)
-    ug = np.interp(Gr.z_half,z_ug_in,ug_in)
-    vg = np.interp(Gr.z_half,z_vg_in,vg_in)
-    qt = np.interp(Gr.z_half,z_qt_in,qt_in)
-    Theta = np.interp(Gr.z_half,z_Theta_in,Theta_in)
+    u = np.interp(Gr.zpl_half,z_u_in,u_in)
+    v = np.interp(Gr.zpl_half,z_v_in,v_in)
+    ug = np.interp(Gr.zpl_half,z_ug_in,ug_in)
+    vg = np.interp(Gr.zpl_half,z_vg_in,vg_in)
+    qt = np.interp(Gr.zpl_half,z_qt_in,qt_in)
+    Theta = np.interp(Gr.zpl_half,z_Theta_in,Theta_in)
 
 
       #Set velocities for Galilean transformation

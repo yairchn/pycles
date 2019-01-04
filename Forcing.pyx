@@ -1258,8 +1258,8 @@ cdef class ForcingTRMM_LBA: # YAIR - check if indeed you wanna duplicate DyCOMS_
                       5.32,   1.14,  -0.65,   5.27,   5.27]),0.5)
 
 
-        self.nudge_u = np.interp(Gr.z_half,z_in,u_in)
-        self.nudge_v = np.interp(Gr.z_half,z_in,v_in)
+        self.nudge_u = np.interp(Gr.zp_half,z_in,u_in)
+        self.nudge_v = np.interp(Gr.zp_half,z_in,v_in)
 
         # Initialize arrays for the  nudging related source terms
         self.source_u_nudge = np.zeros(Gr.dims.nlg[2])
@@ -1412,10 +1412,10 @@ cdef class ForcingARM_SGP: # YAIR - check if indeed you wanna duplicate DyCOMS_R
             dtdt_a = np.interp(TS.t,t_in,AT_in)
             dtdt_r = np.interp(TS.t,t_in,RT_in)
             for k in range(0,Gr.dims.nlg[2]):
-                if Gr.z_half[k] <=1000:
+                if Gr.zp_half[k] <=1000:
                     self.dqtdt[k] = dqtdt
                     self.dtdt[k]  = (dtdt_a + dtdt_r) * exner_c(Ref.p0_half[k])
-                elif Gr.z_half[k] > 1000  and Gr.z_half[k] <= 2000:
+                elif Gr.zp_half[k] > 1000  and Gr.z_half[k] <= 2000:
                     self.dqtdt[k] =   dqtdt*(1-(Gr.z_half[k]-1000)/1000)
                     self.dtdt[k]  = (dtdt_a + dtdt_r) * exner_c(Ref.p0_half[k])*(1-(Gr.z_half[k]-1000)/1000)
          # Now update entropy tendenci
