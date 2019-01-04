@@ -299,7 +299,7 @@ cdef class UpdraftTracers:
             lcl = Pa.domain_scalar_sum(lcl_)
 
             for k in xrange(Gr.dims.nlg[2]-Gr.dims.gw, Gr.dims.gw-1, -1):
-                if Gr.zl_half[k] < lcl:
+                if Gr.zpl_half[k] < lcl:
                     self.index_lcl = k + 1
                     break
 
@@ -388,13 +388,13 @@ cdef class UpdraftTracers:
             Py_ssize_t kmax = Gr.dims.nlg[2] - Gr.dims.gw
 
         if self.lcl_tracers:
-            NS.write_ts('grid_lcl',Gr.zl_half[self.index_lcl], Pa)
+            NS.write_ts('grid_lcl',Gr.zpl_half[self.index_lcl], Pa)
         if 'ql' in DV.name_index:
             ql_shift = DV.get_varshift(Gr,'ql')
             self.get_cloud_heights(Gr, DV, Pa)
             print('cloud base, height ', self.cloud_base, self.cloud_top)
             updraft_indicator_sc_w_ql(&Gr.dims, &PV.values[c_shift], &tracer_normed[0], &mean[0], &mean_square[0],
-                                      &PV.values[w_shift],&DV.values[ql_shift], &Gr.z_half[0], self.cloud_base, self.cloud_top)
+                                      &PV.values[w_shift],&DV.values[ql_shift], &Gr.zp_half[0], self.cloud_base, self.cloud_top)
             # updraft_indicator_sc_w(&Gr.dims, &PV.values[c_shift], &tracer_normed[0], &mean[0], &mean_square[0], &PV.values[w_shift])
 
         else:
@@ -625,8 +625,8 @@ cdef class UpdraftTracers:
                     for k in range(kmin,kmax):
                         ijk = ishift + jshift + k
                         if DV.values[ql_shift+ijk] > ql_threshold:
-                            cb = fmin(cb, Gr.z_half[k])
-                            ct = fmax(ct, Gr.z_half[k])
+                            cb = fmin(cb, Gr.zp_half[k])
+                            ct = fmax(ct, Gr.zp_half[k])
 
         self.cloud_base = Pa.domain_scalar_min(cb)
         self.cloud_top =  Pa.domain_scalar_max(ct)
@@ -707,7 +707,7 @@ cdef class PurityTracers:
             ql_shift = DV.get_varshift(Gr, 'ql')
             self.TracersUpdraft.get_cloud_heights(Gr,DV, Pa)
             updraft_indicator_sc_w_ql(&Gr.dims, &PV.values[c_shift], &tracer_normed[0],&mean[0], &mean_square[0],
-                                      &PV.values[w_shift], &DV.values[ql_shift], &Gr.z_half[0],
+                                      &PV.values[w_shift], &DV.values[ql_shift], &Gr.zp_half[0],
                                       self.TracersUpdraft.cloud_base, self.TracersUpdraft.cloud_top )
 
 
@@ -762,7 +762,7 @@ cdef class PurityTracers:
                 ql_shift = DV.get_varshift(Gr, 'ql')
                 self.TracersUpdraft.get_cloud_heights(Gr,DV, Pa)
                 updraft_indicator_sc_w_ql(&Gr.dims, &PV.values[c_shift], &tracer_normed[0],&mean[0], &mean_square[0],
-                                          &PV.values[w_shift], &DV.values[ql_shift], &Gr.z_half[0],
+                                          &PV.values[w_shift], &DV.values[ql_shift], &Gr.zp_half[0],
                                           self.TracersUpdraft.cloud_base, self.TracersUpdraft.cloud_top )
 
             with nogil:
@@ -958,7 +958,7 @@ cdef updraft_indicator_sc_w(Grid.DimStruct *dims, double *tracer_raw, double *tr
     return
 
 cdef updraft_indicator_sc_w_ql(Grid.DimStruct *dims,  double *tracer_raw, double *tracer_normed, double *mean,
-                               double *meansquare_sigma, double *w, double *ql, double *z_half, double z_cb, double z_ct):
+                               double *meansquare_sigma, double *w, double *ql, double *zp_half, double z_cb, double z_ct):
     cdef:
         Py_ssize_t istride = dims.nlg[1] * dims.nlg[2]
         Py_ssize_t jstride = dims.nlg[2]
@@ -994,7 +994,7 @@ cdef updraft_indicator_sc_w_ql(Grid.DimStruct *dims,  double *tracer_raw, double
     if z_ct > z_cb:
         with nogil:
             for k in xrange(dims.nlg[2]):
-                if z_half[k] >= z_ql and z_half[k] <= z_ct:
+                if zp_half[k] >= z_ql and zp_half[k] <= z_ct:
                     for i in xrange(dims.nlg[0]):
                         for j in xrange(dims.nlg[1]):
                             ijk = i * istride + j * jstride + k

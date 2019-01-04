@@ -16,7 +16,10 @@ cimport DiagnosticVariables
 cimport numpy as np
 from thermodynamic_functions cimport pd_c, pv_c
 from entropies cimport sv_c, sd_c
-
+from scipy.special import erf
+import cPickle
+from scipy.interpolate import pchip
+from thermodynamic_functions cimport cpm_c
 
 include 'parameters.pxi'
 
@@ -26,8 +29,10 @@ cdef class Damping:
             self.scheme = Dummy(namelist, Pa)
             Pa.root_print('No Damping!')
         elif(namelist['damping']['scheme'] == 'Rayleigh'):
+            casename = namelist['meta']['casename']
             self.scheme = Rayleigh(namelist, Pa)
             Pa.root_print('Using Rayleigh Damping')
+
 
         return
 
@@ -54,6 +59,7 @@ cdef class Dummy:
 cdef class Rayleigh:
     def __init__(self, namelist, ParallelMPI.ParallelMPI Pa):
 
+
         try:
             self.z_d = namelist['damping']['Rayleigh']['z_d']
         except:
@@ -67,7 +73,6 @@ cdef class Rayleigh:
             Pa.root_print('Rayleigh damping gamm_r not given in namelist')
             Pa.root_print('Killing simulation now!')
             Pa.kill()
-
         return
 
     cpdef initialize(self, Grid.Grid Gr, ReferenceState.ReferenceState RS):
@@ -80,15 +85,34 @@ cdef class Rayleigh:
             dtype=np.double,
             order='c')
         self.gamma_z = np.zeros((Gr.dims.nlg[2]), dtype=np.double, order='c')
-        z_top = Gr.dims.dx[2] * Gr.dims.n[2]
+        z_top = Gr.zpl[Gr.dims.nlg[2] - Gr.dims.gw]
+
         with nogil:
             for k in range(Gr.dims.nlg[2]):
-                if Gr.zl_half[k] >= z_top - self.z_d:
+                if Gr.zpl_half[k] >= z_top - self.z_d:
                     self.gamma_zhalf[
-                        k] = self.gamma_r * sin((pi / 2.0) * (1.0 - (z_top - Gr.zl_half[k]) / self.z_d))**2.0
-                if Gr.zl[k] >= z_top - self.z_d:
+                        k] = self.gamma_r * sin((pi / 2.0) * (1.0 - (z_top - Gr.zpl_half[k]) / self.z_d))**2.0
+                if Gr.zpl[k] >= z_top - self.z_d:
                     self.gamma_z[
-                        k] = self.gamma_r * sin((pi / 2.0) * (1.0 - (z_top - Gr.zl[k]) / self.z_d))**2.0
+                        k] = self.gamma_r * sin((pi / 2.0) * (1.0 - (z_top - Gr.zpl[k]) / self.z_d))**2.0
+
+
+
+        #Set up tendency damping using error function
+        z_damp = z_top - self.z_d
+        z = (np.array(Gr.zp) - z_damp)/( self.z_d*0.5)
+        z_half = (np.array(Gr.zp_half) - z_damp)/( self.z_d*0.5)
+
+        tend_flat = erf(z)
+        tend_flat[tend_flat < 0.0] = 0.0
+        tend_flat = 1.0 - tend_flat
+        self.tend_flat = tend_flat
+        tend_flat = erf(z_half)
+        tend_flat[tend_flat < 0.0] = 0.0
+        tend_flat = 1.0 - tend_flat
+        self.tend_flat_half = tend_flat
+
+
         return
 
     cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState RS, PrognosticVariables.PrognosticVariables PV,
@@ -106,6 +130,7 @@ cdef class Rayleigh:
             Py_ssize_t i, j, k, ishift, jshift, ijk
             double[:] domain_mean
 
+
         for var_name in PV.name_index:
             var_shift = PV.get_varshift(Gr, var_name)
             domain_mean = Pa.HorizontalMean(Gr, & PV.values[var_shift])
@@ -117,8 +142,9 @@ cdef class Rayleigh:
                             jshift = j * jstride
                             for k in xrange(kmin, kmax):
                                 ijk = ishift + jshift + k
-                                PV.tendencies[var_shift + ijk] -= (PV.values[var_shift + ijk] - domain_mean[k]) * self.gamma_zhalf[k]
-            else:
+                                PV.tendencies[var_shift + ijk] *= self.tend_flat_half[k]
+
+            elif var_name == 'u' or var_name == 'v':
                 with nogil:
                     for i in xrange(imin, imax):
                         ishift = i * istride
@@ -127,7 +153,23 @@ cdef class Rayleigh:
                             for k in xrange(kmin, kmax):
                                 ijk = ishift + jshift + k
                                 PV.tendencies[var_shift + ijk] -= (PV.values[var_shift + ijk] - domain_mean[k]) * self.gamma_z[k]
+            else:
+                with nogil:
+                    for i in xrange(imin, imax):
+                        ishift = i * istride
+                        for j in xrange(jmin, jmax):
+                            jshift = j * jstride
+                            for k in xrange(kmin, kmax):
+                                ijk = ishift + jshift + k
+                                PV.tendencies[var_shift + ijk] *= self.tend_flat[k]
+                                PV.tendencies[var_shift + ijk] -= (PV.values[var_shift + ijk] - domain_mean[k]) * self.gamma_z[k]
         return
 
 
-
+from scipy.interpolate import pchip
+def interp_pchip(z_out, z_in, v_in, pchip_type=False):
+    if pchip_type:
+        p = pchip(z_in, v_in, extrapolate=True)
+        return p(z_out)
+    else:
+        return np.interp(z_out, z_in, v_in)
