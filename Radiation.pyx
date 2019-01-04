@@ -1182,7 +1182,7 @@ cdef class RadiationTRMM_LBA(RadiationBase):
                 self.rad_cool[kk] = self.rad[0,kk]
         elif TS.t>18900.0:
             for kk in range(0,Gr.dims.nlg[2]):
-                self.rad_cool[kk] = (self.rad[31,kk]-self.rad[30,kk])/(self.rad_time[31]-self.rad_time[30])*(18900.0/60.0-self.rad_time[30])+self.rad[30,kk]
+                self.rad_cool[kk] = (self.rad[31,kk]-self.rad[30,kk])/(self.rad_time[31]-self.rad_time[30])*(18900.0-self.rad_time[30])+self.rad[30,kk]
 
         else:
             if TS.t%600.0 == 0:     # in case you step right on the data point
@@ -1191,7 +1191,7 @@ cdef class RadiationTRMM_LBA(RadiationBase):
             else: # in all other cases - interpolate
                 for kk in range(0,Gr.dims.nlg[2]):
                     if Gr.zp_half[kk] < 22699.48:
-                        self.rad_cool[kk]    = (self.rad[ind2,kk]-self.rad[ind1,kk])/(self.rad_time[ind2]-self.rad_time[ind1])*(TS.t/60.0-self.rad_time[ind1])+self.rad[ind1,kk] # yair check the impact of the dt typo
+                        self.rad_cool[kk]    = (self.rad[ind2,kk]-self.rad[ind1,kk])/(self.rad_time[ind2]-self.rad_time[ind1])*(TS.t-self.rad_time[ind1])+self.rad[ind1,kk] # yair check the impact of the dt typo
                     else:
                         self.rad_cool[kk] = 0.1
                 #self.rad_cool[kk]    = (self.rad[ind2,kk]-self.rad[ind1,kk])/(self.rad_time[ind2]-self.rad_time[ind1])*TS.dt+self.rad[ind1,kk] # yair check the impact of the dt typ
