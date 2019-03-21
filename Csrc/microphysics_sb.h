@@ -701,4 +701,3 @@ void sb_evaporation_rain_wrapper(const struct DimStruct *dims, struct LookupStru
     }
     return;
 }
-

@@ -101,7 +101,7 @@ def SullivanPatton():
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = False
     namelist['tracers']['use_lcl_tracers'] = False
-    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['scheme'] = 'UpdraftTracers'
     namelist['tracers']['timescale'] = 15.0
 
     namelist['thermodynamics'] = {}
@@ -268,7 +268,7 @@ def StableBubble():
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = False
     namelist['tracers']['use_lcl_tracers'] = False
-    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['scheme'] = 'UpdraftTracers'
     namelist['tracers']['timescale'] = 15.0
 
     namelist['thermodynamics'] = {}
@@ -356,7 +356,7 @@ def Bomex():
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = False
     namelist['tracers']['use_lcl_tracers'] = False
-    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['scheme'] = 'UpdraftTracers'
     namelist['tracers']['timescale'] = 15.0
 
     namelist['microphysics'] = {}
@@ -414,8 +414,8 @@ def Bomex():
 
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = True
-    namelist['tracers']['scheme'] = 'PurityTracers'
-    namelist['tracers']['use_lcl_tracers'] = True
+    namelist['tracers']['scheme'] = 'UpdraftTracers'
+    namelist['tracers']['use_lcl_tracers'] = False
 
     return namelist
 
@@ -457,7 +457,7 @@ def Soares():
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = False
     namelist['tracers']['use_lcl_tracers'] = False
-    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['scheme'] = 'UpdraftTracers'
     namelist['tracers']['timescale'] = 15.0
 
     namelist['microphysics'] = {}
@@ -579,7 +579,7 @@ def Soares_moist():
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = False
     namelist['tracers']['use_lcl_tracers'] = False
-    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['scheme'] = 'UpdraftTracers'
     namelist['tracers']['timescale'] = 15.0
 
     namelist['microphysics'] = {}
@@ -662,6 +662,9 @@ def Soares_moist():
     namelist['ClausiusClapeyron'] = {}
     namelist['ClausiusClapeyron']['temperature_min'] = 100.15
     namelist['ClausiusClapeyron']['temperature_max'] = 500.0
+=======
+    namelist['tracers']['use_lcl_tracers'] = False
+>>>>>>> 56c6bc81a06b4446c0caa5e3729657dace90b7d7
 
     return namelist
 
@@ -1057,7 +1060,7 @@ def Rico():
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = False
     namelist['tracers']['use_lcl_tracers'] = False
-    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['scheme'] = 'UpdraftTracers'
     namelist['tracers']['timescale'] = 15.0
 
     namelist['sgs'] = {}
@@ -1643,7 +1646,7 @@ def TRMM_LBA():
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = True
     namelist['tracers']['use_lcl_tracers'] = False
-    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['scheme'] = 'UpdraftTracers'
     namelist['tracers']['timescale'] = 60.0
 
     namelist['diffusion'] = {}
@@ -1733,7 +1736,7 @@ def ARM_SGP():
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = True
     namelist['tracers']['use_lcl_tracers'] = False
-    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['scheme'] = 'UpdraftTracers'
     namelist['tracers']['timescale'] = 15.0
 
     namelist['diffusion'] = {}
@@ -1823,7 +1826,7 @@ def SCMS():
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = True
     namelist['tracers']['use_lcl_tracers'] = False
-    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['scheme'] = 'UpdraftTracers'
     namelist['tracers']['timescale'] = 15.0
 
     namelist['diffusion'] = {}
@@ -1913,7 +1916,7 @@ def GATE_III():
     namelist['tracers'] = {}
     namelist['tracers']['use_tracers'] = True
     namelist['tracers']['use_lcl_tracers'] = False
-    namelist['tracers']['scheme'] = 'PurityTracers'
+    namelist['tracers']['scheme'] = 'UpdraftTracers'
     namelist['tracers']['timescale'] = 60.0
 
     namelist['diffusion'] = {}

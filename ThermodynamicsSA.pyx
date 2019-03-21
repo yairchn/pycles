@@ -82,19 +82,20 @@ cdef class ThermodynamicsSA:
         :return:
         '''
 
-        PV.add_variable('s', 'm/s', "sym", "scalar", Pa)
-        PV.add_variable('qt', 'kg/kg', "sym", "scalar", Pa)
+        PV.add_variable('s', 'J kg^-1 K^-1', 's', 'specific entropy', "sym", "scalar", Pa)
+        PV.add_variable('qt', 'kg/kg', 'q_t', 'total water mass fraction', "sym", "scalar", Pa)
 
         # Initialize class member arrays
-        DV.add_variables('buoyancy', '--', 'sym', Pa)
-        DV.add_variables('alpha', '--', 'sym', Pa)
-        DV.add_variables('temperature', 'K', 'sym', Pa)
-        DV.add_variables('buoyancy_frequency', '1/s', 'sym', Pa)
-        DV.add_variables('qv', 'kg/kg', 'sym', Pa)
-        DV.add_variables('ql', 'kg/kg', 'sym', Pa)
-        DV.add_variables('qi', 'kg/kg', 'sym', Pa)
-        DV.add_variables('theta_rho', 'K', 'sym', Pa)
-        DV.add_variables('thetali', 'K', 'sym', Pa)
+        DV.add_variables('buoyancy' ,r'ms^{-1}', r'b', 'buoyancy','sym', Pa)
+        DV.add_variables('alpha', r'm^3kg^-2', r'\alpha', 'specific volume', 'sym', Pa)
+        DV.add_variables('temperature', r'K', r'T', r'temperature', 'sym', Pa)
+        DV.add_variables('buoyancy_frequency', r's^-1', r'N', 'buoyancy frequencyt', 'sym', Pa)
+        DV.add_variables('qv', 'kg/kg', r'q_v', 'water vapor specific humidity', 'sym', Pa)
+        DV.add_variables('ql', 'kg/kg', r'q_l', 'liquid water specific humidity', 'sym', Pa)
+        DV.add_variables('qi', 'kg/kg', r'q_i', 'ice water specific humidity', 'sym', Pa)
+        DV.add_variables('theta_rho', 'K', r'\theta_{\rho}', 'density potential temperature', 'sym', Pa)
+        DV.add_variables('thetali', 'K', r'\theta_l', r'liqiud water potential temperature', 'sym', Pa)
+
 
 
         # Add statistical output
@@ -206,7 +207,8 @@ cdef class ThermodynamicsSA:
 
         buoyancy_update_sa(&Gr.dims, &RS.alpha0_half[0], &DV.values[alpha_shift], &DV.values[buoyancy_shift], &PV.tendencies[w_shift])
 
-        bvf_sa( &Gr.dims, &self.CC.LT.LookupStructC, self.Lambda_fp, self.L_fp, &RS.p0_half[0], &DV.values[t_shift], &PV.values[qt_shift], &DV.values[qv_shift], &DV.values[thr_shift], &DV.values[bvf_shift])
+        bvf_sa( &Gr.dims, &self.CC.LT.LookupStructC, self.Lambda_fp, self.L_fp, &RS.p0_half[0], &DV.values[t_shift],
+                &PV.values[qt_shift], &DV.values[qv_shift], &DV.values[thr_shift], &DV.values[bvf_shift])
 
         thetali_update(&Gr.dims,self.Lambda_fp, self.L_fp, &RS.p0_half[0], &DV.values[t_shift], &PV.values[qt_shift], &DV.values[ql_shift],&DV.values[qi_shift],&DV.values[thl_shift])
 
