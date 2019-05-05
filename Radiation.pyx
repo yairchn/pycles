@@ -1043,8 +1043,6 @@ cdef class RadiationTRMM_LBA(RadiationBase):
                  Surface.SurfaceBase Sur, TimeStepping.TimeStepping TS, ParallelMPI.ParallelMPI Pa):
 
         self.rad_cool = np.zeros(Gr.dims.nlg[2], dtype=np.double)
-        ind1 = int(math.trunc(TS.t/600.0))                   # the index preceding the current time step
-        ind2 = int(math.ceil(TS.t/600.0))                    # the index following the current time step
         self.rad_cool = self.rad
 
         # if TS.t<600.0: # first 10 min use the radiative forcing of t=10min

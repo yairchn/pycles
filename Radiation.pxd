@@ -131,11 +131,11 @@ cdef class RadiationRRTM(RadiationBase):
 
 cdef class RadiationTRMM_LBA(RadiationBase):
     cdef:
-        double [:,:] rad
+        double [:] rad
         double [:] rad_time
         double [:] rad_temp
         double [:] rad_cool
-        double [:,:] rad_in
+        double [:] rad_in
         double [:] z_in
      #   double [:] heating_rate
     cpdef initialize(self, Grid.Grid Gr, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa)
