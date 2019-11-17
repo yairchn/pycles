@@ -269,8 +269,6 @@ cdef class ForcingBrico:
 
         with nogil:
             for k in xrange(Gr.dims.nlg[2]):
-                self.ug[k] = -10.0 + (1.8e-3)*Gr.zpl_half[k]
-
                 #Set large scale cooling
                 # Convert given form of tendencies (theta) to temperature tendency
                 self.dtdt[k] = 0.0
