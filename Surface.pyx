@@ -49,6 +49,8 @@ def SurfaceFactory(namelist, LatentHeat LH, ParallelMPI.ParallelMPI Par):
            return SurfaceSullivanPatton(LH)
         elif casename == 'Bomex':
             return SurfaceBomex(LH)
+        elif casename == 'Brico':
+            return SurfaceBomex(LH)
         elif casename == 'lifecycle_Tan2018':
             return SurfaceLifecycle_Tan2018(LH)
         elif casename == 'Soares':

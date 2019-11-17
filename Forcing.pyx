@@ -28,6 +28,8 @@ cdef class Forcing:
             self.scheme = ForcingSullivanPatton()
         elif casename == 'Bomex' or casename == 'lifecycle_Tan2018':
             self.scheme = ForcingBomex()
+        elif casename == 'Brico':
+            self.scheme = ForcingBrico()
         elif casename == 'Soares':
             self.scheme = ForcingSoares()
         elif casename == 'Soares_moist':
@@ -134,6 +136,52 @@ cdef class ForcingBomex:
                 if Gr.zpl_half[k] > 1500.0 and Gr.zpl_half[k] <= 2100.0:
                     self.subsidence[k] = -0.65/100 + (Gr.zpl_half[k] - 1500.0)* (0.0 - -0.65/100.0)/(2100.0 - 1500.0)
 
+
+        #Initialize Statistical Output
+        NS.add_profile('s_subsidence_tendency', Gr, Pa)
+        NS.add_profile('qt_subsidence_tendency', Gr, Pa)
+        NS.add_profile('u_subsidence_tendency', Gr, Pa)
+        NS.add_profile('v_subsidence_tendency', Gr, Pa)
+        NS.add_profile('u_coriolis_tendency', Gr, Pa)
+        NS.add_profile('v_coriolis_tendency',Gr, Pa)
+
+        return
+
+
+cdef class ForcingBrico:
+    def __init__(self):
+        return
+
+    cpdef initialize(self, Grid.Grid Gr,ReferenceState.ReferenceState RS, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):
+        self.ug = np.zeros(Gr.dims.nlg[2],dtype=np.double,order='c')
+        self.vg = np.zeros(Gr.dims.nlg[2],dtype=np.double,order='c')
+        self.dtdt = np.zeros(Gr.dims.nlg[2],dtype=np.double,order='c')
+        self.dqtdt = np.zeros(Gr.dims.nlg[2],dtype=np.double,order='c')
+        self.subsidence = np.zeros(Gr.dims.nlg[2],dtype=np.double,order='c')
+        self.coriolis_param = 0.376e-4 #s^{-1}
+
+        cdef:
+            Py_ssize_t k
+
+
+        with nogil:
+            for k in xrange(Gr.dims.nlg[2]):
+                self.ug[k] = -10.0 + (1.8e-3)*Gr.zpl_half[k]
+
+                #Set large scale cooling
+                # Convert given form of tendencies (theta) to temperature tendency
+                self.dtdt[k] = 0.0
+                if Gr.zpl_half[k] <= 2260.0:
+                    self.dqtdt[k] = 0.0
+                    self.subsidence[k] = -(0.005/2260.0) * Gr.zpl_half[k]
+                else:
+                    self.subsidence[k] = -0.005
+                if Gr.zpl_half[k]<=2980.0:
+                    self.dqtdt[k] = (-1.0 + 1.3456/2980.0 * Gr.zpl_half[k])/86400.0/1000.0
+                else:
+                    self.dqtdt[k] = 0.3456/86400.0/1000.0
+                self.ug[k] = -9.9 + 2.0e-3 * Gr.zpl_half[k]
+                self.vg[k] = -3.8
 
         #Initialize Statistical Output
         NS.add_profile('s_subsidence_tendency', Gr, Pa)

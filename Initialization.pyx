@@ -32,6 +32,8 @@ def InitializationFactory(namelist):
             return InitSaturatedBubble
         elif casename == 'Bomex' or casename == 'lifecycle_Tan2018':
             return InitBomex
+        elif casename == 'Brico':
+            return InitRico
         elif casename == 'Soares':
             return InitSoares
         elif casename == 'Soares_moist':
