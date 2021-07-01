@@ -1559,9 +1559,9 @@ cdef class ForcingLES_deriven_LES:
         self.les_dtdt_rad     = np.array(les_data['profiles'].variables['v_mean'])
 
 
-        with nogil:
-            for k in range(Gr.dims.nlg[2]):
-                self.subsidence.base[k] = self.les_subsidence[0,k]
+        # with nogil:
+        for k in range(Gr.dims.nlg[2]):
+            self.subsidence[k] = self.les_subsidence[0,k]
 
         #Initialize Statistical Output
         NS.add_profile('s_subsidence_tendency', Gr, Pa)
