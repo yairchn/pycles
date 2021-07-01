@@ -1561,7 +1561,7 @@ cdef class ForcingLES_deriven_LES:
 
         with nogil:
             for k in range(Gr.dims.nlg[2]):
-                self.subsidence[k] = self.les_subsidence[0,k]
+                self.subsidence.base[k] = self.les_subsidence[0,k]
 
         #Initialize Statistical Output
         NS.add_profile('s_subsidence_tendency', Gr, Pa)
