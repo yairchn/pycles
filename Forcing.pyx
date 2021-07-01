@@ -1592,23 +1592,23 @@ cdef class ForcingLES_deriven_LES:
         f_v_nudge     = interp2d(self.z_les, self.t_les, self.les_v_nudge)
         f_dtdt_rad    = interp2d(self.z_les, self.t_les, self.les_dtdt_rad)
 
-        with nogil:
-            for k in range(Gr.dims.nlg[2]):
-                self.dtdt_hadv[k] = f_dtdt_hadv(Gr.z_half[k], TS.t)
-                self.dtdt_nudge[k] = f_dtdt_nudge(Gr.z_half[k], TS.t)
-                self.dtdt_fluc[k] = f_dtdt_fluc(Gr.z_half[k], TS.t)
-                self.dqtdt_hadv[k] = f_dqtdt_hadv(Gr.z_half[k], TS.t)
-                self.dqtdt_nudge[k] = f_dqtdt_nudge(Gr.z_half[k], TS.t)
-                self.dqtdt_fluc[k] = f_dqtdt_fluc(Gr.z_half[k], TS.t)
-                self.subsidence[k] = f_subsidence(Gr.z_half[k], TS.t)
-                self.u_nudge[k] = f_u_nudge(Gr.z_half[k], TS.t)
-                self.v_nudge[k] = f_v_nudge(Gr.z_half[k], TS.t)
-                self.dtdt_rad[k] = f_dtdt_rad(Gr.z_half[k], TS.t)
+        # with nogil:
+        for k in range(Gr.dims.nlg[2]):
+            self.dtdt_hadv[k] = f_dtdt_hadv(Gr.z_half[k], TS.t)
+            self.dtdt_nudge[k] = f_dtdt_nudge(Gr.z_half[k], TS.t)
+            self.dtdt_fluc[k] = f_dtdt_fluc(Gr.z_half[k], TS.t)
+            self.dqtdt_hadv[k] = f_dqtdt_hadv(Gr.z_half[k], TS.t)
+            self.dqtdt_nudge[k] = f_dqtdt_nudge(Gr.z_half[k], TS.t)
+            self.dqtdt_fluc[k] = f_dqtdt_fluc(Gr.z_half[k], TS.t)
+            self.subsidence[k] = f_subsidence(Gr.z_half[k], TS.t)
+            self.u_nudge[k] = f_u_nudge(Gr.z_half[k], TS.t)
+            self.v_nudge[k] = f_v_nudge(Gr.z_half[k], TS.t)
+            self.dtdt_rad[k] = f_dtdt_rad(Gr.z_half[k], TS.t)
 
-                PV.tendencies[s_shift]  += (self.dtdt_rad[k] + self.dtdt_hadv[k] + self.dtdt_fluc[k] + self.dtdt_nudge[k]) * RS.alpha0_half[k] / DV.values[ijk + t_shift]
-                PV.tendencies[qt_shift] +=  self.dqtdt_fluc[k] + self.dqtdt_nudge[k] + self.dqtdt_hadv[k]
-                PV.tendencies[u_shift]  += (self.u_nudge[k] - PV.values[u_shift])/self.nudge_tau
-                PV.tendencies[v_shift]  += (self.v_nudge[k] - PV.values[v_shift])/self.nudge_tau
+            PV.tendencies[s_shift]  += (self.dtdt_rad[k] + self.dtdt_hadv[k] + self.dtdt_fluc[k] + self.dtdt_nudge[k]) * RS.alpha0_half[k] / DV.values[ijk + t_shift]
+            PV.tendencies[qt_shift] +=  self.dqtdt_fluc[k] + self.dqtdt_nudge[k] + self.dqtdt_hadv[k]
+            PV.tendencies[u_shift]  += (self.u_nudge[k] - PV.values[u_shift])/self.nudge_tau
+            PV.tendencies[v_shift]  += (self.v_nudge[k] - PV.values[v_shift])/self.nudge_tau
 
         apply_subsidence(&Gr.dims,&RS.rho0[0],&RS.rho0_half[0],&self.subsidence[0],&PV.values[s_shift],&PV.tendencies[s_shift])
         apply_subsidence(&Gr.dims,&RS.rho0[0],&RS.rho0_half[0],&self.subsidence[0],&PV.values[qt_shift],&PV.tendencies[qt_shift])
