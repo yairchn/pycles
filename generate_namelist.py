@@ -1972,6 +1972,97 @@ def GATE_III():
     return namelist
 
 
+def LES_deriven_LES():
+    namelist = {}
+
+    namelist['grid'] = {}
+    namelist['grid']['dims'] = 3
+    namelist['grid']['nx'] = 200
+    namelist['grid']['ny'] = 200
+    namelist['grid']['nz'] = 200
+    namelist['grid']['gw'] = 7
+    namelist['grid']['dx'] = 20.0
+    namelist['grid']['dy'] = 20.0
+    namelist['grid']['dz'] = 20.0
+
+    namelist['mpi'] = {}
+    namelist['mpi']['nprocx'] = 1
+    namelist['mpi']['nprocy'] = 1
+    namelist['mpi']['nprocz'] = 1
+
+    namelist['time_stepping'] = {}
+    namelist['time_stepping']['ts_type'] = 3
+    namelist['time_stepping']['cfl_limit'] = 0.7
+    namelist['time_stepping']['dt_initial'] = 1.0
+    namelist['time_stepping']['dt_max'] = 2.0
+    namelist['time_stepping']['t_max'] = 3600.0 * 24.0
+
+    namelist['thermodynamics'] = {}
+    namelist['thermodynamics']['latentheat'] = 'constant'
+
+    namelist['microphysics'] = {}
+    namelist['microphysics']['scheme'] = 'None'  # T_Liquid'
+    namelist['microphysics']['phase_partitioning'] = 'liquid_only'  # liquid_ice
+
+    namelist['sgs'] = {}
+    namelist['sgs']['scheme'] = 'Smagorinsky'
+    namelist['sgs']['Smagorinsky'] ={}
+    namelist['sgs']['Smagorinsky']['iles'] = True
+
+    # yair - add tracer transport to the simulation
+    namelist['tracers'] = {}
+    namelist['tracers']['use_tracers'] = False
+    namelist['tracers']['scheme'] = 'UpdraftTracers'
+    namelist['tracers']['use_lcl_tracers'] = False
+    namelist['tracers']['timescale'] = 60.0
+
+    namelist['diffusion'] = {}
+    namelist['diffusion']['qt_entropy_source'] = False
+
+    namelist['momentum_transport'] = {}
+    namelist['momentum_transport']['order'] = 5 # the WENO order of the momentum advection scheme
+
+    namelist['scalar_transport'] = {}
+    namelist['scalar_transport']['order'] = 5 # the WENO order of the scaler advection scheme
+    namelist['scalar_transport']['order_sedimentation'] = 1
+
+    namelist['damping'] = {}
+    namelist['damping']['scheme'] = 'Rayleigh'
+    namelist['damping']['Rayleigh'] = {}
+    namelist['damping']['Rayleigh']['gamma_r'] = 0.2
+    namelist['damping']['Rayleigh']['z_d'] = 7000
+
+    namelist['output'] = {}
+    namelist['output']['output_root'] = './'
+
+    namelist['stats_io'] = {}
+    namelist['stats_io']['stats_dir'] = 'stats'
+    namelist['stats_io']['auxiliary'] = ['Cumulus']
+    namelist['stats_io']['frequency'] = 100.0
+
+    namelist['fields_io'] = {}
+    namelist['fields_io']['fields_dir'] = 'fields'
+    namelist['fields_io']['frequency'] = 1800.0
+    namelist['fields_io']['diagnostic_fields'] = ['ql', 'temperature', 'buoyancy_frequency', 'viscosity']
+
+    namelist['meta'] = {}
+    namelist['meta']['simname'] = 'LES_deriven_LES'
+    namelist['meta']['casename'] = 'LES_deriven_LES'
+
+    namelist['restart'] = {}
+    namelist['restart']['output'] = True
+    namelist['restart']['init_from'] = False
+    namelist['restart']['input_path'] = './'
+    namelist['restart']['frequency'] = 600.0
+
+    namelist['conditional_stats'] = {}
+    namelist['conditional_stats']['classes'] = ['Spectra']
+    namelist['conditional_stats']['frequency'] = 600.0
+    namelist['conditional_stats']['stats_dir'] = 'cond_stats'
+
+    return namelist
+
+
 
 def write_file(namelist):
 

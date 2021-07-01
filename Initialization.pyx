@@ -58,6 +58,8 @@ def InitializationFactory(namelist):
             return  InitGATE_III
         elif casename == 'WANGARA':
             return  InitWANGARA
+        elif casename == 'LES_driven_LES':
+            return  InitLES_driven_LES
         else:
             pass
 
@@ -1916,6 +1918,116 @@ def InitWANGARA(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables P
                 else:
                     PV.values[ijk + s_varshift] = Th.entropy(RS.p0_half[k], T , qt[k], 0.0, 0.0)
     return
+
+def InitLES_driven_LES(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVariables PV,
+                       ReferenceState.ReferenceState RS, Th, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa , LatentHeat LH):
+    #First generate the reference profiles
+    RS.Pg = 1.015e5  #Pressure at ground
+    RS.Tg = 300.4  #Temperature at ground
+    RS.qtg = 0.02245   #Total water mixing ratio at surface
+    les_filename = namelist[''][]
+
+    # RS.initialize(Gr, Th, NS, Pa)
+    les_data = nc.Dataset(les_filename,'r')
+    alpha0           = np.array(les_data.groups['reference'].variables['alpha0'])
+    alpha0_full      = np.array(les_data.groups['reference'].variables['alpha0_full'])
+    p0_full          = np.array(les_data.groups['reference'].variables['p0_full'])
+    p0         = np.array(les_data.groups['reference'].variables['p0'])
+    z          = np.array(les_data.groups['profiles'].variables['z'])
+    z_half     = np.array(les_data.groups['profiles'].variables['z_half'])
+
+    f_les_alpha0          = interp1d(z_les_half, alpha0, fill_value="extrapolate")
+    f_les_alpha0_full     = interp1d(z_les_half, alpha0_full, fill_value="extrapolate")
+    f_les_p0_full      = interp1d(z_les, p0_full, fill_value="extrapolate")
+    f_les_p0          = interp1d(z_les, p0, fill_value="extrapolate")
+    alpha_half       = f_les_alpha_half(Gr.z_half)
+    alpha            = f_les_alpha(Gr.z)
+    p_half           = f_les_p_half(Gr.z_half)
+    p_               = f_les_p(Gr.z_half)
+
+    RS.alpha0           = alpha_half
+    RS.alpha0_full      = alpha
+    RS.p0_full          = p_
+    RS.p0               = p_half
+    RS.rho0        = 1.0 / np.array(self.alpha0)
+    RS.rho0_full   = 1.0 / np.array(self.alpha0_full)
+
+    self.Pg  = les_p[0]
+    self.qtg = np.array(les_data.groups['profiles'].variables['qt_mean'])[0,0]
+    self.Tg  = np.array(les_data.groups['timeseries'].variables['surface_temperature'])[0]
+    try:
+        random_seed_factor = namelist['initialization']['random_seed_factor']
+    except:
+        random_seed_factor = 1
+
+    np.random.seed(Pa.rank * random_seed_factor)
+
+    #Get the variable number for each of the velocity components
+
+    cdef:
+        Py_ssize_t u_varshift = PV.get_varshift(Gr,'u')
+        Py_ssize_t v_varshift = PV.get_varshift(Gr,'v')
+        Py_ssize_t w_varshift = PV.get_varshift(Gr,'w')
+        Py_ssize_t s_varshift = PV.get_varshift(Gr,'s')
+        Py_ssize_t qt_varshift = PV.get_varshift(Gr,'qt')
+        Py_ssize_t i,j,k
+        Py_ssize_t ishift, jshift
+        Py_ssize_t ijk, e_varshift
+        double temp
+        double qt_
+        double [:] thetal = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')
+        double [:] qt = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')
+        double [:] u = np.empty((Gr.dims.nlg[2]),dtype=np.double,order='c')
+        Py_ssize_t count
+
+        theta_pert = (np.random.random_sample(Gr.dims.npg )-0.5)*0.1
+        qt_pert = (np.random.random_sample(Gr.dims.npg )-0.5)*0.025/1000.0
+
+    # initilize the prrofiles from LES
+    les_data = nc.Dataset(self.les_filename,'r')
+    thetal  = np.array(les_data.groups['profiles'].variables['thetali_mean'])
+    qt      = np.array(les_data.groups['profiles'].variables['qt_mean'])
+    u       = np.array(les_data.groups['profiles'].variables['u_mean'])
+    v       = np.array(les_data.groups['profiles'].variables['v_mean'])
+
+    #Set velocities for Galilean transformation
+    RS.v0 = 0.0
+    RS.u0 = 0.5 * (np.amax(u)+np.amin(u))
+
+    #Now loop and set the initial condition
+    #First set the velocities
+    count = 0
+    for i in xrange(Gr.dims.nlg[0]):
+        ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
+        for j in xrange(Gr.dims.nlg[1]):
+            jshift = j * Gr.dims.nlg[2]
+            for k in xrange(Gr.dims.nlg[2]):
+                ijk = ishift + jshift + k
+                PV.values[u_varshift + ijk] = u[k] - RS.u0
+                PV.values[v_varshift + ijk] = 0.0 - RS.v0
+                PV.values[w_varshift + ijk] = 0.0
+                if Gr.zp_half[k] <= 1600.0:
+                    temp = (thetal[k] + (theta_pert[count])) * exner_c(RS.p0_half[k])
+                    qt_ = qt[k]+qt_pert[count]
+                else:
+                    temp = (thetal[k]) * exner_c(RS.p0_half[k])
+                    qt_ = qt[k]
+                PV.values[s_varshift + ijk] = Th.entropy(RS.p0_half[k],temp,qt_,0.0,0.0)
+                PV.values[qt_varshift + ijk] = qt_
+                count += 1
+
+    if 'e' in PV.name_index:
+        e_varshift = PV.get_varshift(Gr, 'e')
+        for i in xrange(Gr.dims.nlg[0]):
+            ishift =  i * Gr.dims.nlg[1] * Gr.dims.nlg[2]
+            for j in xrange(Gr.dims.nlg[1]):
+                jshift = j * Gr.dims.nlg[2]
+                for k in xrange(Gr.dims.nlg[2]):
+                    ijk = ishift + jshift + k
+                    PV.values[e_varshift + ijk] = 1.0-Gr.zp_half[k]/3000.0
+
+    return
+
 
 def AuxillaryVariables(nml, PrognosticVariables.PrognosticVariables PV,
                        DiagnosticVariables.DiagnosticVariables DV, ParallelMPI.ParallelMPI Pa):

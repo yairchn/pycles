@@ -226,6 +226,35 @@ cdef class ForcingGATE_III:
                  PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV,
                    NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa)
 
+
+cdef class ForcingLES_driven_LES:
+    cdef:
+
+        double tau_inverse
+        double [:] nudge_u
+        double [:] nudge_v
+        double [:] source_u_nudge
+        double [:] source_v_nudge
+        double [:] dtdt
+        double [:] dqtdt
+        double [:,:] les_dtdt_hadv
+        double [:,:] les_dtdt_nudge
+        double [:,:] les_dtdt_fluc
+        double [:,:] les_dqtdt_hadv
+        double [:,:] les_dqtdt_nudge
+        double [:,:] les_dqtdt_fluc
+        double [:,:] les_subsidence
+        double [:,:] les_u_nudge
+        double [:,:] les_v_nudge
+        double [:,:] dtdt_rad
+
+    cpdef initialize(self, Grid.Grid Gr, ReferenceState.ReferenceState RS,NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa)
+    cpdef update(self, Grid.Grid Gr, ReferenceState.ReferenceState RS,
+                 PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV, ParallelMPI.ParallelMPI Pa, TimeStepping.TimeStepping TS)
+    cpdef stats_io(self, Grid.Grid Gr, ReferenceState.ReferenceState RS,
+                 PrognosticVariables.PrognosticVariables PV, DiagnosticVariables.DiagnosticVariables DV,
+                   NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa)
+
 cdef class AdjustedMoistAdiabat:
     cdef:
         double [:] s
