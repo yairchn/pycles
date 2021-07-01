@@ -1544,7 +1544,7 @@ cdef class ForcingLES_deriven_LES:
 
         self.nudge_tau = 6.0*3600.0
         # load the netCDF file
-        les_data = nc.Dataset(les_filename,'r')
+        les_data = nc.Dataset(self.les_filename,'r')
         self.t_les = np.array(les_data.groups['profiles'].variables['t'])
         self.z_les = np.array(les_data.groups['profiles'].variables['z'])
         self.les_dtdt_hadv   = np.array(les_data['profiles'].variables['dtdt_hadv'])
