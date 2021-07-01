@@ -20,6 +20,7 @@ cimport ParallelMPI
 cimport Lookup
 from Thermodynamics cimport LatentHeat, ClausiusClapeyron
 include 'parameters.pxi'
+from scipy.interpolate import interp2d
 
 cdef class Forcing:
     def __init__(self, namelist, LatentHeat LH, ParallelMPI.ParallelMPI Pa):

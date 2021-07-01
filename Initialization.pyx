@@ -9,6 +9,7 @@ import netCDF4 as nc
 import numpy as np
 cimport numpy as np
 from scipy.interpolate import PchipInterpolator,pchip_interpolate
+from scipy.interpolate import interp1d
 cimport ParallelMPI
 from NetCDFIO cimport NetCDFIO_Stats
 cimport Grid
