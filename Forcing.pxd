@@ -231,6 +231,7 @@ cdef class ForcingLES_driven_LES:
     cdef:
 
         double tau_inverse
+        double nudge_tau
         double [:] nudge_u
         double [:] nudge_v
         double [:] source_u_nudge
