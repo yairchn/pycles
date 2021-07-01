@@ -1527,9 +1527,10 @@ cdef class ForcingGATE_III:
         return
 
 cdef class ForcingLES_deriven_LES:
-    def __init__(self,casename):
+    def __init__(self,namelist):
         self.divergence = 3.75e-6
         self.coriolis_param = 2.0 * omega * sin(31.5 * pi / 180.0 )
+        self.les_filename = namelist['meta']['lesfile']
         return
 
     cpdef initialize(self, Grid.Grid Gr,ReferenceState.ReferenceState RS, NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa):
@@ -1543,7 +1544,6 @@ cdef class ForcingLES_deriven_LES:
 
         self.nudge_tau = 6.0*3600.0
         # load the netCDF file
-        les_filename = namelist['meta']['lesfile']
         les_data = nc.Dataset(les_filename,'r')
         self.t_les = np.array(les_data.groups['profiles'].variables['t'])
         self.z_les = np.array(les_data.groups['profiles'].variables['z'])

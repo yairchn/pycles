@@ -230,6 +230,7 @@ cdef class ForcingGATE_III:
 cdef class ForcingLES_deriven_LES:
     cdef:
 
+        str les_filename
         double tau_inverse
         double nudge_tau
         double [:] nudge_u
