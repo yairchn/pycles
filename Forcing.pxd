@@ -227,7 +227,7 @@ cdef class ForcingGATE_III:
                    NetCDFIO_Stats NS, ParallelMPI.ParallelMPI Pa)
 
 
-cdef class ForcingLES_driven_LES:
+cdef class ForcingLES_deriven_LES:
     cdef:
 
         double tau_inverse
