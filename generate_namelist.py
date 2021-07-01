@@ -2048,6 +2048,7 @@ def LES_deriven_LES():
     namelist['meta'] = {}
     namelist['meta']['simname'] = 'LES_deriven_LES'
     namelist['meta']['casename'] = 'LES_deriven_LES'
+    namelist['meta']['lesfile'] = 'cfsite23_HadGEM2-A_amip_2004-2008.07'
 
     namelist['restart'] = {}
     namelist['restart']['output'] = True

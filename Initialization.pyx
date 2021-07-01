@@ -1925,7 +1925,7 @@ def InitLES_driven_LES(namelist, Grid.Grid Gr,PrognosticVariables.PrognosticVari
     RS.Pg = 1.015e5  #Pressure at ground
     RS.Tg = 300.4  #Temperature at ground
     RS.qtg = 0.02245   #Total water mixing ratio at surface
-    les_filename = namelist[''][]
+    les_filename = namelist['meta']['lesfile']
 
     # RS.initialize(Gr, Th, NS, Pa)
     les_data = nc.Dataset(les_filename,'r')
